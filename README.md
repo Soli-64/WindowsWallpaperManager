@@ -1,5 +1,5 @@
 
 # Windows Wallpaper manager
 
-## A wallpaper manager for windows inpired from linux full-keyboard ux.
+## A wallpaper manager for windows inpired by wayland full-keyboard ux.
 

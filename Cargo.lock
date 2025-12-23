@@ -1033,6 +1033,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "dirs"
+version = "5.0.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "44c45a9d03d6676652bcb5e724c7e988de1acad23a711b5217ab9cbecbec2225"
+dependencies = [
+ "dirs-sys",
+]
+
+[[package]]
 name = "dirs-sys"
 version = "0.4.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -3860,7 +3869,7 @@ version = "3.2.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "0547c84bf49b1096b20ce49736b86cd27f8225fc426665d3fba19e71e44c4d46"
 dependencies = [
- "dirs",
+ "dirs 1.0.5",
  "enquote",
  "rust-ini",
  "winapi",
@@ -4280,11 +4289,13 @@ version = "0.1.0"
 dependencies = [
  "anyhow",
  "directories",
+ "dirs 5.0.1",
  "eframe",
  "image",
  "once_cell",
  "rand",
  "raw-window-handle",
+ "rayon",
  "rdev",
  "rfd",
  "serde",

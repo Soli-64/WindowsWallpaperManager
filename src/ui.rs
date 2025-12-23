@@ -1,4 +1,12 @@
-use eframe::egui::{self, CentralPanel, ScrollArea, TextureHandle};
+use eframe::egui::{
+    self, 
+    CentralPanel, 
+    ScrollArea, 
+    TextureHandle, 
+    Color32
+};
+use image::imageops::FilterType;
+use std::path::Path;
 use std::sync::Mutex;
 use once_cell::sync::Lazy;
 use windows_sys::Win32::Foundation::HWND;
@@ -10,19 +18,59 @@ use windows_sys::Win32::UI::WindowsAndMessaging::{
     GWL_EXSTYLE,
     WS_EX_LAYERED,
 };
-use egui::Color32;
+use super::services::{
+    hotkey::toggle_window_state,
+    storage::{
+        thumb_dir,
+        list_files_recursive
+    },
+    wp::set_from_thumbnail_path
+};
 
 const LWA_ALPHA: u32 = 0x00000002;
-
-use crate::services::{
-    hotkey::toggle_window_state,
-};
 
 #[derive(Clone)]
 #[allow(dead_code)]
 struct CarouselItem {
     tex: TextureHandle,
     size: egui::Vec2,
+}
+
+fn load_image(
+    ctx: &egui::Context,
+    path: impl AsRef<Path>,
+    display_size: egui::Vec2,
+) -> anyhow::Result<CarouselItem> {
+    
+    let bytes = std::fs::read(path.as_ref())?;
+    
+    let mut img = image::load_from_memory(&bytes)?.to_rgba8();
+    
+    let max_side = 2048;
+    let (orig_w, orig_h) = img.dimensions();
+
+    if orig_w as usize > max_side || orig_h as usize > max_side {
+        let ratio = orig_h as f32 / orig_w as f32;
+        let new_w = 320 as u32;
+        let new_h = (320.0*ratio).round() as u32;
+
+        img = image::imageops::resize(&img, new_w, new_h, FilterType::Nearest);
+    }
+    
+    let color_image = egui::ColorImage::from_rgba_unmultiplied([img.width() as usize, img.height() as usize], img.as_flat_samples().as_slice());
+    
+    let tex = ctx.load_texture(
+        path.as_ref()
+            .file_name()
+            .unwrap_or_default()
+            .to_string_lossy(),
+        color_image,
+        egui::TextureOptions::default(),
+    );
+    Ok(CarouselItem {
+        tex,
+        size: display_size,
+    })
 }
 
 static MOUSE_PASSTHROUGH_STATE: Lazy<Mutex<bool>> = Lazy::new(|| Mutex::new(false));
@@ -66,9 +114,8 @@ fn find_window_by_title(title: &str) -> Option<isize> {
 
 struct WallpaperApp {
     visible: bool,
-    items: Vec<CarouselItem>,
-    #[allow(dead_code)]
-    selected: usize
+    thumbs_path: Vec<std::path::PathBuf>,
+    items: Vec<CarouselItem>
 }
 
 
@@ -80,7 +127,7 @@ impl WallpaperApp {
 
         Self {
             items,
-            selected: 0,
+            thumbs_path: Vec::new(),
             visible: false
         }
     }
@@ -88,7 +135,32 @@ impl WallpaperApp {
     fn load_items(
         _ctx: &egui::Context
     ) -> Vec<CarouselItem> {
-        let items = Vec::new();
+
+        let mut items = Vec::new();
+
+        let paths = match list_files_recursive(thumb_dir(), Some(2), Some(&["png","jpg","jpeg"])) {
+            Ok(v) => v,
+            Err(e) => {
+                eprintln!("Error reading thumbs directory: {}", e);
+                return Vec::new();   
+            }
+        };
+
+        for path in paths {
+            match load_image(
+                _ctx,
+                &path,
+                egui::Vec2 { x: 320.0, y: 180.0 },
+            ) {
+                Ok(item) => {
+                    items.push(item);
+                }
+                Err(e) => {
+                    eprintln!("Error loading {:?} : {}", path, e);
+                }
+            }
+        }
+
         items
     }
 
@@ -102,7 +174,10 @@ impl WallpaperApp {
                     for item in &self.items {
                             ui.add(
                                 egui::Image::new(&item.tex)
-                            );
+                            ).interact(egui::Sense::click()).clicked().then(|| {
+                                println!("Clicked on thumbnail {}", item.tex.name());
+                                set_from_thumbnail_path(item.tex.name().as_str())
+                            });
                             ui.add_space(12.0);
                         }
                 
@@ -117,6 +192,14 @@ impl eframe::App for WallpaperApp {
     
     fn update(&mut self, _ctx: &egui::Context, _frame: &mut eframe::Frame) {
         
+        let paths = list_files_recursive(thumb_dir(), Some(2), Some(&["png","jpg","jpeg"]))
+            .expect("Failed to list thumbnail files");
+
+        if paths != self.thumbs_path {
+            self.thumbs_path = paths;
+            self.items = WallpaperApp::load_items(_ctx);
+        }
+
         static HWND_STORED: Lazy<Mutex<bool>> = Lazy::new(|| Mutex::new(false));
         {
             let mut stored = HWND_STORED.lock().unwrap();
@@ -202,7 +285,7 @@ pub fn run_app() -> eframe::Result<()> {
     };
 
     eframe::run_native(
-        "Wallpaper Manager",
+        "WallpaperManager-@lsoapps",
         native_options,
         Box::new(move |_cc| {
             let app = WallpaperApp::new(_cc);
@@ -211,7 +294,7 @@ pub fn run_app() -> eframe::Result<()> {
 
             std::thread::spawn(move || {
                 std::thread::sleep(std::time::Duration::from_millis(500));
-                if let Some(hwnd) = find_window_by_title("Wallpaper Manager") {
+                if let Some(hwnd) = find_window_by_title("WallpaperManager-@lsoapps") {
                     store_window_hwnd(hwnd);
                 }
                 toggle_window_state(ctx.clone());

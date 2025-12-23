@@ -23,3 +23,5 @@ raw-window-handle = "0.6.2"
 rdev = "0.5.3"
 image = { version = "0.25", features = ["png", "jpeg"] }
 walkdir = "2.5"
+rayon = "1.7"
+dirs = "5.0"
