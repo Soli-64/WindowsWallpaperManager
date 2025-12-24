@@ -2,6 +2,9 @@
 name = "win-wallpaper"
 version = "0.1.0"
 edition = "2024"
+authors = ["Soli-64"]
+license = "MIT"
+description = "A little app for changing wallpaper easily."
 
 [dependencies]
 eframe = {version = "0.33.3", features = ["persistence"]}
