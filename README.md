@@ -10,3 +10,5 @@
 
 ## Upcoming:
 ### - Full keyboard UX for changing wallpapers
+
+![alt text](docs/image.png)
