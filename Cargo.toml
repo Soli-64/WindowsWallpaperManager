@@ -7,7 +7,7 @@ license = "MIT"
 description = "A little app for changing wallpaper easily."
 
 [dependencies]
-eframe = {version = "0.33.3", features = ["persistence"]}
+eframe = {version = "0.33.3"}
 serde = { version = "1.0", features = ["derive"] }
 serde_yaml = "0.9"
 directories = "5.0"
