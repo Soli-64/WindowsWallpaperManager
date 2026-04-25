@@ -1,6 +1,7 @@
 {
   "name": "win-wallpaper",
   "version": "0.1.0",
+  "license": "MIT",
   "type": "module",
   "repository": {
     "url": "https://github.com/Soli-64/WindowsWallpaperManager"

@@ -5,8 +5,7 @@
   line-height: 1.5;
   font-weight: 400;
 
-  color-scheme: light dark;
-  color: rgba(255, 255, 255, 0.87);
+  color-scheme: dark;
   background-color: #0f172a;
 
   font-synthesis: none;
@@ -17,8 +16,6 @@
 
 body {
   margin: 0;
-  display: flex;
-  place-items: center;
   min-width: 320px;
   min-height: 100vh;
 }
@@ -34,10 +31,6 @@ body {
   background: linear-gradient(135deg, #38bdf8 0%, #818cf8 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
-}
-
-.bg-gradient-main {
-  background: radial-gradient(circle at top right, #1e293b, #0f172a);
 }
 
 @theme {
