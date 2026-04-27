@@ -3,7 +3,7 @@ mod thumbnail;
 
 use tauri::{Manager, Position, Size, WebviewUrl, WebviewWindowBuilder};
 use tauri_plugin_wallpaper::{WallpaperExt, AttachRequest};
-use storage::{wallpapers_dir, list_files_recursive, ensure_storage_initialized, save_config, load_config};
+use storage::{wallpapers_dir, list_files_recursive, ensure_storage_initialized, save_config, load_config, widgets_dir, widgets_config_path};
 use thumbnail::ThumbnailManager;
 
 #[tauri::command]
@@ -35,6 +35,36 @@ pub struct WallpaperItem {
     path: String,
     thumb_path: String,
     is_video: bool,
+}
+
+#[derive(serde::Serialize, serde::Deserialize, Clone)]
+pub struct Widget {
+    id: String,
+    name: String,
+    html_file: String,
+    #[serde(default)]
+    html_content: String,
+}
+
+#[tauri::command]
+fn get_widgets() -> Result<Vec<Widget>, String> {
+    let config_path = widgets_config_path();
+    if !config_path.exists() {
+        return Ok(vec![]);
+    }
+
+    let content = std::fs::read_to_string(&config_path).map_err(|e| e.to_string())?;
+    let mut widgets: Vec<Widget> = serde_json::from_str(&content).map_err(|e| e.to_string())?;
+
+    let w_dir = widgets_dir();
+    for widget in &mut widgets {
+        let html_path = w_dir.join(&widget.html_file);
+        if html_path.exists() {
+            widget.html_content = std::fs::read_to_string(html_path).unwrap_or_default();
+        }
+    }
+
+    Ok(widgets)
 }
 
 #[tauri::command]
@@ -150,7 +180,7 @@ pub fn run() {
 
             Ok(())
         })
-        .invoke_handler(tauri::generate_handler![get_wallpapers, set_wallpaper_config, get_default_wallpaper])
+        .invoke_handler(tauri::generate_handler![get_wallpapers, set_wallpaper_config, get_default_wallpaper, get_widgets])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
 }

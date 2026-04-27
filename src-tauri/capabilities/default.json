@@ -11,6 +11,7 @@
     "allow-get-wallpapers",
     "allow-set-wallpaper-config",
     "allow-get-default-wallpaper",
+    "allow-get-widgets",
     "global-shortcut:default"
   ]
 }

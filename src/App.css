@@ -23,3 +23,18 @@ html, body {
   object-fit: cover;
   z-index: -1;
 }
+
+.widgets-layer {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  pointer-events: none; /* Let clicks pass through to wallpaper if needed, or set to all for interactive widgets */
+  z-index: 10;
+}
+
+.widget {
+  pointer-events: all; /* Make widgets interactive */
+  user-select: none;
+}

@@ -17,15 +17,26 @@ pub fn thumb_dir() -> PathBuf {
         .join("thumbnails")
 }
 
+pub fn widgets_dir() -> PathBuf {
+    dirs::document_dir()
+        .unwrap_or_else(|| PathBuf::from("."))
+        .join("win-wallpaper")
+        .join("widgets")
+}
+
 pub fn ensure_storage_initialized() {
     let w_dir = wallpapers_dir();
     let t_dir = thumb_dir();
+    let wg_dir = widgets_dir();
 
     if !w_dir.exists() {
         std::fs::create_dir_all(&w_dir).unwrap();
     }
     if !t_dir.exists() {
         std::fs::create_dir_all(&t_dir).unwrap();
+    }
+    if !wg_dir.exists() {
+        std::fs::create_dir_all(&wg_dir).unwrap();
     }
 }
 
@@ -34,6 +45,13 @@ pub fn config_file_path() -> PathBuf {
         .unwrap_or_else(|| PathBuf::from("."))
         .join("win-wallpaper")
         .join("config.json")
+}
+
+pub fn widgets_config_path() -> PathBuf {
+    dirs::document_dir()
+        .unwrap_or_else(|| PathBuf::from("."))
+        .join("win-wallpaper")
+        .join("widgets.json")
 }
 
 fn load_full_config() -> Value {

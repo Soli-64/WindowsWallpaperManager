@@ -30,6 +30,16 @@
         ],
         "deny": []
       }
+    },
+    {
+      "identifier": "allow-get-widgets",
+      "description": "Allow getting widgets",
+      "commands": {
+        "allow": [
+          "get_widgets"
+        ],
+        "deny": []
+      }
     }
   ]
 }
