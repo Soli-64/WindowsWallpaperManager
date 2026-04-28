@@ -7,7 +7,7 @@ A native Windows wallpaper manager built with Tauri v2 and React. It provides a 
 - Multi-Monitor Support: Automatically detects all active monitors and creates dedicated background windows for each.
 - Media Support: Supports standard image formats and video files (MP4, WebM).
 - Automatic Thumbnails: Generates and caches thumbnails for all media types using FFmpeg.
-- Global Shortcut: Toggle the selection interface at any time using Alt + W.
+- Global Shortcut: Toggle the selection interface at any time (Default: Alt + W, configurable in config.json).
 - Session Persistence: Remembers and reloads your last selected wallpaper on startup.
 - Performance: Built with Rust and React for a lightweight and responsive experience.
 
@@ -45,14 +45,14 @@ The application stores all data in your Documents folder under the `win-wallpape
 
 - Wallpapers: Place your media files in `~/Documents/win-wallpaper/wallpapers`.
 - Thumbnails: Automatically generated in `~/Documents/win-wallpaper/thumbnails`.
-- Settings: Last used settings are stored in `~/Documents/win-wallpaper/config.json`.
+- Settings: Last used settings and keyboard shortcut are stored in `~/Documents/win-wallpaper/config.json`.
 
 ## Usage
 
 1. Place your desired images or videos in the wallpapers directory.
 2. Launch the application.
 3. Use the selection bar at the bottom to switch wallpapers.
-4. Press Alt + W to hide or show the selection bar.
+4. Press the global shortcut (Default: Alt + W) to hide or show the selection bar.
 
 ## Screenshots & Demo
 
@@ -62,7 +62,16 @@ The application stores all data in your Documents folder under the `win-wallpape
 
 ![Demo](docs/media/present_1.gif)
 
+
+## Known Issues
+
+- **Launch on Startup**: The "Launch on Startup" feature may not function correctly in some environments due to registry permission limitations or installer configuration. If the application doesn't start with Windows, you can manually add a shortcut to the Windows Startup folder:
+    1. Press `Win + R`, type `shell:startup`, and press Enter.
+    2. Create a shortcut to the `win-wallpaper.exe` in that folder.
+- **Video Thumbnails**: Video thumbnails require FFmpeg to be installed and available in your system PATH. If you just installed FFmpeg via the installer, a system restart may be required for the PATH changes to take effect.
+
 ## Contributing
+
 
 Contributions are welcome! If you'd like to improve WinWallpaper, please feel free to submit a Pull Request or open an issue.
 
