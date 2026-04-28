@@ -70,7 +70,7 @@ EndHook:
 
     DetailPrint "Adding Wallpaper App to Windows startup..."
 
-    WriteRegStr HKCU "Software\Microsoft\Windows\CurrentVersion\Run" "WinWallpaper" '"$INSTDIR\wallpaper-app.exe"'
+    WriteRegStr HKCU "Software\Microsoft\Windows\CurrentVersion\Run" "WinWallpaper" '"$INSTDIR\win-wallpaper.exe"'
 
     ${If} ${Errors}
         DetailPrint "Failed to add to startup."
@@ -79,3 +79,10 @@ EndHook:
     ${EndIf}
 
 !macroend
+
+; !macro NSIS_HOOK_POSTUNINSTALL
+
+;     DetailPrint "Removing Wallpaper App from Windows startup..."
+;     DeleteRegValue HKCU "Software\Microsoft\Windows\CurrentVersion\Run" "WinWallpaper"
+
+; !macroend

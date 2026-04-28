@@ -1,9 +1,12 @@
 mod storage;
 mod thumbnail;
 
+use storage::{
+    ensure_storage_initialized, get_shortcut, list_files_recursive, load_config, save_config,
+    wallpapers_dir, widgets_config_path, widgets_dir,
+};
 use tauri::{Manager, Position, Size, WebviewUrl, WebviewWindowBuilder};
-use tauri_plugin_wallpaper::{WallpaperExt, AttachRequest};
-use storage::{wallpapers_dir, list_files_recursive, ensure_storage_initialized, save_config, load_config, widgets_dir, widgets_config_path};
+use tauri_plugin_wallpaper::{AttachRequest, WallpaperExt};
 use thumbnail::ThumbnailManager;
 
 #[tauri::command]
@@ -70,20 +73,26 @@ fn get_widgets() -> Result<Vec<Widget>, String> {
 #[tauri::command]
 fn get_wallpapers() -> Vec<WallpaperItem> {
     ensure_storage_initialized();
-    
+
     let mut items = Vec::new();
-    let extensions = ["png", "jpg", "jpeg", "webp", "mp4", "webm", "mov"]; 
+    let extensions = ["png", "jpg", "jpeg", "webp", "mp4", "webm", "mov"];
     let paths = list_files_recursive(wallpapers_dir(), 1, Some(&extensions));
-    
+
     let thumb_manager = ThumbnailManager::new();
 
     for path in paths {
         let is_video = match path.extension() {
-            Some(ext) => ["mp4", "webm", "mov"].contains(&ext.to_string_lossy().to_lowercase().as_str()),
+            Some(ext) => {
+                ["mp4", "webm", "mov"].contains(&ext.to_string_lossy().to_lowercase().as_str())
+            }
             None => false,
         };
 
-        let name = path.file_name().unwrap_or_default().to_string_lossy().into_owned();
+        let name = path
+            .file_name()
+            .unwrap_or_default()
+            .to_string_lossy()
+            .into_owned();
         let thumb_path = match thumb_manager.create_thumbnail(&path, is_video) {
             Ok(p) => p.to_string_lossy().into_owned(),
             Err(e) => {
@@ -104,6 +113,7 @@ fn get_wallpapers() -> Vec<WallpaperItem> {
     items
 }
 
+use tauri_plugin_global_shortcut::Shortcut;
 use tauri_plugin_global_shortcut::{GlobalShortcutExt, ShortcutState};
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
@@ -111,61 +121,92 @@ pub fn run() {
     tauri::Builder::default()
         .plugin(tauri_plugin_opener::init())
         .plugin(tauri_plugin_wallpaper::init())
-        .plugin(tauri_plugin_global_shortcut::Builder::new()
-            .with_handler(|app, shortcut, event| {
-                println!("Shortcut event received: {:?} for {}", event.state(), shortcut.to_string());
-                if event.state() == ShortcutState::Pressed {
-                    let shortcut_str = shortcut.to_string().to_lowercase();
-                    if shortcut_str == "alt+w" || shortcut_str == "alt+keyw" {
-                        println!("Alt+W detected! Toggling switch-bar...");
-                        if let Some(window) = app.get_webview_window("switch-bar") {
-                            let is_visible = window.is_visible().unwrap_or(false);
-                            println!("Current visibility: {}", is_visible);
-                            if is_visible {
-                                window.hide().unwrap();
-                                window.set_ignore_cursor_events(true).unwrap();
-                                println!("Hidden and ignoring cursor events.");
+        .plugin(
+            tauri_plugin_global_shortcut::Builder::new()
+                .with_handler(|app, shortcut, event| {
+                    println!(
+                        "Shortcut event received: {:?} for {}",
+                        event.state(),
+                        shortcut.to_string()
+                    );
+                    if event.state() == ShortcutState::Pressed {
+                        let active_shortcut = get_shortcut();
+                        let shortcut_str = shortcut.to_string().to_lowercase();
+
+                        // Match either "alt+w" or "alt+keyw" (Tauri v2 format)
+                        let matches = shortcut_str == active_shortcut
+                            || shortcut_str == active_shortcut.replace("+", "+key");
+
+                        if matches {
+                            println!(
+                                "Shortcut {} detected! Toggling switch-bar...",
+                                active_shortcut
+                            );
+                            if let Some(window) = app.get_webview_window("switch-bar") {
+                                let is_visible = window.is_visible().unwrap_or(false);
+                                println!("Current visibility: {}", is_visible);
+                                if is_visible {
+                                    window.hide().unwrap();
+                                    window.set_ignore_cursor_events(true).unwrap();
+                                    println!("Hidden and ignoring cursor events.");
+                                } else {
+                                    window.show().unwrap();
+                                    window.set_ignore_cursor_events(false).unwrap();
+                                    window.set_focus().unwrap();
+                                    let _ = window.eval("window.focus();");
+                                    println!("Shown and accepting cursor events.");
+                                }
                             } else {
-                                window.show().unwrap();
-                                window.set_ignore_cursor_events(false).unwrap();
-                                window.set_focus().unwrap();
-                                let _ = window.eval("window.focus();");
-                                println!("Shown and accepting cursor events.");
+                                println!("Error: 'switch-bar' window not found!");
                             }
-                        } else {
-                            println!("Error: 'switch-bar' window not found!");
                         }
                     }
-                }
-            })
-            .build())
+                })
+                .build(),
+        )
         .setup(|app| {
+            // Storage
             ensure_storage_initialized();
 
-            // Register Shortcut
-            match app.global_shortcut().register("alt+w") {
-                Ok(_) => println!("Successfully registered Alt+W shortcut"),
-                Err(e) => println!("Failed to register Alt+W shortcut: {}", e),
+            // Register Shortcut from config
+            let shortcut_to_reg = get_shortcut();
+
+            // Convert stored shortcut string into the Shortcut type required by the API
+            // Shortcut (HotKey) can be parsed from a &str using TryFrom/FromStr implementations
+            let shortcut_wrapper = Shortcut::try_from(shortcut_to_reg.as_str())
+                .expect("Invalid shortcut format stored in config");
+            match app.global_shortcut().register(shortcut_wrapper) {
+                Ok(_) => println!("Successfully registered {} shortcut", shortcut_to_reg),
+                Err(e) => println!("Failed to register {} shortcut: {}", shortcut_to_reg, e),
             }
 
             let monitors = app.available_monitors().unwrap();
 
             for (i, monitor) in monitors.iter().enumerate() {
-
-                println!("Monitor: {}", monitor.name().expect("Monitor name not found").as_str());
+                println!(
+                    "Monitor: {}",
+                    monitor.name().expect("Monitor name not found").as_str()
+                );
 
                 let label = format!("wallpaper-{}", i);
-                println!("Creating window {} for monitor: {}x{} @ ({},{})", 
-                    label, monitor.size().width, monitor.size().height, monitor.position().x, monitor.position().y);
+                println!(
+                    "Creating window {} for monitor: {}x{} @ ({},{})",
+                    label,
+                    monitor.size().width,
+                    monitor.size().height,
+                    monitor.position().x,
+                    monitor.position().y
+                );
 
-                let window = WebviewWindowBuilder::new(app, &label, WebviewUrl::App("index.html".into()))
-                    .title("Animated Wallpaper")
-                    .decorations(false)
-                    .transparent(true)
-                    .resizable(false)
-                    .visible(false)      
-                    .fullscreen(true)
-                    .build()?;
+                let window =
+                    WebviewWindowBuilder::new(app, &label, WebviewUrl::App("index.html".into()))
+                        .title("Animated Wallpaper")
+                        .decorations(false)
+                        .transparent(true)
+                        .resizable(false)
+                        .visible(false)
+                        .fullscreen(true)
+                        .build()?;
 
                 let pos = monitor.position();
                 let size = monitor.size();
@@ -173,14 +214,21 @@ pub fn run() {
                 window.set_position(Position::Physical(*pos))?;
                 window.set_size(Size::Physical(*size))?;
                 window.show()?;
-                
+
                 // Attach as wallpaper
-                app.handle().wallpaper().attach(AttachRequest::new(&label))?;
+                app.handle()
+                    .wallpaper()
+                    .attach(AttachRequest::new(&label))?;
             }
 
             Ok(())
         })
-        .invoke_handler(tauri::generate_handler![get_wallpapers, set_wallpaper_config, get_default_wallpaper, get_widgets])
+        .invoke_handler(tauri::generate_handler![
+            get_wallpapers,
+            set_wallpaper_config,
+            get_default_wallpaper,
+            get_widgets
+        ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
 }

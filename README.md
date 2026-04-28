@@ -65,9 +65,7 @@ The application stores all data in your Documents folder under the `win-wallpape
 
 ## Known Issues
 
-- **Launch on Startup**: The "Launch on Startup" feature may not function correctly in some environments due to registry permission limitations or installer configuration. If the application doesn't start with Windows, you can manually add a shortcut to the Windows Startup folder:
-    1. Press `Win + R`, type `shell:startup`, and press Enter.
-    2. Create a shortcut to the `win-wallpaper.exe` in that folder.
+- **Launch on Startup**: The "Launch on Startup" feature may not function correctly in some environments due to registry permission limitations or installer configuration. If the application doesn't start with Windows, activate the launch on startup option in the settings.
 - **Video Thumbnails**: Video thumbnails require FFmpeg to be installed and available in your system PATH. If you just installed FFmpeg via the installer, a system restart may be required for the PATH changes to take effect.
 
 ## Contributing

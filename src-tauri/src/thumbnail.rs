@@ -1,8 +1,8 @@
-use std::path::PathBuf;
-use std::fs;
+use crate::storage::thumb_dir;
 use image::DynamicImage;
+use std::fs;
+use std::path::PathBuf;
 use std::process::Command;
-use crate::storage::{thumb_dir};
 
 pub struct ThumbnailManager {}
 
@@ -12,7 +12,10 @@ impl ThumbnailManager {
     }
 
     fn generate_thumbnail_filename(&self, original_path: &PathBuf) -> PathBuf {
-        let filename = original_path.file_stem().unwrap_or_default().to_string_lossy();
+        let filename = original_path
+            .file_stem()
+            .unwrap_or_default()
+            .to_string_lossy();
         PathBuf::from(format!("thumb_{}.png", filename))
     }
 
@@ -27,7 +30,7 @@ impl ThumbnailManager {
         is_video: bool,
     ) -> Result<PathBuf, Box<dyn std::error::Error>> {
         let thumb_path = self.get_thumbnail_path(original_path);
-        
+
         if thumb_path.exists() {
             return Ok(thumb_path);
         }
@@ -44,7 +47,7 @@ impl ThumbnailManager {
             let thumb = img.thumbnail(max_width, max_height);
             thumb.save(&thumb_path)?;
         }
-        
+
         Ok(thumb_path)
     }
 
@@ -60,7 +63,10 @@ impl ThumbnailManager {
         ));
 
         // ffmpeg scaling to save CPU/RAM
-        let scale_filter = format!("scale={}:{}:force_original_aspect_ratio=decrease", width, height);
+        let scale_filter = format!(
+            "scale={}:{}:force_original_aspect_ratio=decrease",
+            width, height
+        );
 
         let output = Command::new("ffmpeg")
             .args(&[
@@ -70,7 +76,8 @@ impl ThumbnailManager {
                 &format!("select=eq(n\\,0),{}", scale_filter),
                 "-q:v",
                 "2",
-                "-vframes", "1",
+                "-vframes",
+                "1",
                 temp_frame.to_str().ok_or("Invalid temp path")?,
             ])
             .output()?;

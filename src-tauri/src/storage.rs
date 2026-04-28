@@ -1,7 +1,7 @@
-use std::path::{PathBuf};
 use dirs;
+use serde_json::{json, Value};
+use std::path::PathBuf;
 use walkdir::WalkDir;
-use serde_json::{Value, json};
 
 pub fn wallpapers_dir() -> PathBuf {
     dirs::document_dir()
@@ -84,7 +84,6 @@ pub fn get_config_value(key: &str) -> Option<Value> {
     config.get(key).cloned()
 }
 
-
 // Backward compatibility with previous version
 pub fn save_config(path: String) {
     set_config_value("last_wallpaper", json!(path));
@@ -94,7 +93,17 @@ pub fn load_config() -> Option<String> {
     get_config_value("last_wallpaper").and_then(|v| v.as_str().map(|s| s.to_string()))
 }
 
-pub fn list_files_recursive(dir: PathBuf, depth: usize, extensions: Option<&[&str]>) -> Vec<PathBuf> {
+pub fn get_shortcut() -> String {
+    get_config_value("shortcut")
+        .and_then(|v| v.as_str().map(|s| s.to_string().to_lowercase()))
+        .unwrap_or_else(|| "alt+w".to_string())
+}
+
+pub fn list_files_recursive(
+    dir: PathBuf,
+    depth: usize,
+    extensions: Option<&[&str]>,
+) -> Vec<PathBuf> {
     let mut files = Vec::new();
 
     for entry in WalkDir::new(dir)
