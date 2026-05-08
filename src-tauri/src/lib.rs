@@ -8,6 +8,7 @@ use storage::{
 use tauri::{Manager, Position, Size, WebviewUrl, WebviewWindowBuilder};
 use tauri_plugin_wallpaper::{AttachRequest, WallpaperExt};
 use thumbnail::ThumbnailManager;
+use notify::{Watcher, RecursiveMode};
 
 #[tauri::command]
 fn set_wallpaper_config(path: String) {
@@ -189,6 +190,23 @@ pub fn run() {
         .setup(|app| {
             // Storage
             ensure_storage_initialized();
+
+            let app_handle = app.handle().clone();
+            let mut watcher = notify::recommended_watcher(move |res: notify::Result<notify::Event>| {
+                match res {
+                    Ok(event) => {
+                        if event.kind.is_modify() || event.kind.is_create() || event.kind.is_remove() {
+                            let _ = app_handle.emit("update-widgets", ());
+                        }
+                    },
+                    Err(e) => println!("watch error: {:?}", e),
+                }
+            }).expect("Failed to create watcher");
+
+            watcher.watch(std::path::Path::new(&widgets_dir()), RecursiveMode::Recursive)
+                .expect("Failed to watch widgets directory");
+
+            app.manage(std::sync::Mutex::new(watcher));
 
             let quit_i = MenuItem::with_id(app, "quit", "Quit", true, None::<&str>)?;
             let show_i = MenuItem::with_id(app, "show", "Open Wallpaper Bar", true, None::<&str>)?;

@@ -57,16 +57,29 @@ function App() {
       .catch((err) => console.error("Failed to load widgets:", err));
 
     const setupListener = async () => {
-      const unlisten = await listen<string>("update-wallpaper", (event) => {
+      const unlistenWallpaper = await listen<string>("update-wallpaper", (event) => {
         console.log("New wallpaper:", event.payload);
         setWallpaperPath(event.payload);
       });
-      return unlisten;
+
+      const unlistenWidgets = await listen("update-widgets", () => {
+        console.log("Widgets updated, reloading...");
+        invoke<Widget[]>("get_widgets")
+          .then((data) => {
+            setWidgets(data);
+          })
+          .catch((err) => console.error("Failed to reload widgets:", err));
+      });
+
+      return () => {
+        unlistenWallpaper();
+        unlistenWidgets();
+      };
     };
 
-    const promise = setupListener();
+    const cleanup = setupListener();
     return () => {
-      promise.then(unlisten => unlisten());
+      cleanup.then(unlisten => unlisten());
     };
   }, []);
 
