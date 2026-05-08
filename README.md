@@ -9,6 +9,7 @@ A native Windows wallpaper manager built with Tauri v2 and React. It provides a 
 - Automatic Thumbnails: Generates and caches thumbnails for all media types using FFmpeg.
 - Global Shortcut: Toggle the selection interface at any time (Default: Alt + W, configurable in config.json).
 - Session Persistence: Remembers and reloads your last selected wallpaper on startup.
+- System Tray Integration: Right-click the tray icon for quick access to app controls, cycling wallpapers, or quitting the app.
 - Performance: Built with Rust and React for a lightweight and responsive experience.
 
 ## Prerequisites
@@ -69,7 +70,6 @@ The application stores all data in your Documents folder under the `win-wallpape
 - **Video Thumbnails**: Video thumbnails require FFmpeg to be installed and available in your system PATH. If you just installed FFmpeg via the installer, a system restart may be required for the PATH changes to take effect.
 
 ## Contributing
-
 
 Contributions are welcome! If you'd like to improve WinWallpaper, please feel free to submit a Pull Request or open an issue.
 

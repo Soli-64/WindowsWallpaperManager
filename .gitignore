@@ -6,6 +6,8 @@
 /src-tauri/gen
 /dist
 
+/plans
+
 *.env
 *.local
 *.msi
