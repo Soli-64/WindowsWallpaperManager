@@ -5,7 +5,7 @@ use storage::{
     ensure_storage_initialized, get_shortcut, list_files_recursive, load_config, save_config,
     wallpapers_dir, widgets_config_path, widgets_dir,
 };
-use tauri::{Manager, WebviewUrl, WebviewWindowBuilder};
+use tauri::{Manager, Position, Size, WebviewUrl, WebviewWindowBuilder};
 use tauri_plugin_wallpaper::{AttachRequest, WallpaperExt};
 use thumbnail::ThumbnailManager;
 use notify::{Watcher, RecursiveMode};
@@ -355,9 +355,13 @@ pub fn run() {
                         .fullscreen(false)
                         // Changed the sizing and positioning in build to avoid some multi-screen errors
                         // and scale it down 
-                        .inner_size(size.width as f64 / monitor.scale_factor(), size.height as f64 / monitor.scale_factor())
-                        .position((pos.x - min_x) as f64 / monitor.scale_factor(), (pos.y - min_y) as f64 / monitor.scale_factor())
                         .build()?;
+
+                window.set_size(Size::Physical(size.clone()))?;
+                window.set_position(Position::Physical(tauri::PhysicalPosition { 
+                    x: pos.x - min_x, 
+                    y: pos.y - min_y 
+                }))?;
 
                 window.show()?;
 
