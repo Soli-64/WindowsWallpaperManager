@@ -316,8 +316,16 @@ pub fn run() {
             //
             let monitors = app.available_monitors().unwrap();
 
+            let mut base_x = 0;
+            let mut base_y = 0;
+
             for (i, monitor) in monitors.iter().enumerate() {
                 
+                if monitor.name().unwrap().ends_with("1") {
+                    base_x -= monitor.position().x;
+                    base_y -= monitor.position().y;
+                }
+
                 println!(
                     "Monitor: {}",
                     monitor.name().expect("Monitor name not found").as_str()
@@ -335,19 +343,37 @@ pub fn run() {
 
                 let window =
                     WebviewWindowBuilder::new(app, &label, WebviewUrl::App("index.html".into()))
-                        .title("Animated Wallpaper")
-                        .decorations(false)
+                        .title(&format!("Wallpaper Bar {}", i))
+                        .decorations(true)
                         .transparent(true)
                         .resizable(false)
                         .visible(false)
-                        .fullscreen(true)
+                        // .fullscreen(true)
                         .build()?;
 
                 let pos = monitor.position();
                 let size = monitor.size();
 
-                window.set_position(Position::Physical(*pos))?;
-                window.set_size(Size::Physical(*size))?;
+                // Center the window on that monitor
+                println!(
+                    "Base position: {}x{}",
+                    base_x,
+                    base_y
+                );
+                println!(
+                    "Displaying at Position: {}x{}",
+                    pos.x + base_x,
+                    pos.y + base_y
+                );
+                window.set_position(tauri::PhysicalPosition {
+                    x: base_x + pos.x - 10,
+                    y: pos.y - 40, 
+                })?;
+
+                window.set_size(tauri::PhysicalSize {
+                    width: size.width,
+                    height: size.height,
+                })?;
                 window.show()?;
 
                 // Attach as wallpaper

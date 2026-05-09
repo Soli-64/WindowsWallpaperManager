@@ -10,12 +10,15 @@ interface Widget {
   html_content: string;
 }
 
+// 
+// Component to render widgets
+// 
 function WidgetComponent({ widget }: { widget: Widget }) {
   const containerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (containerRef.current) {
-      // Inject HTML (which now contains styles)
+      // Inject HTML (which already contains styles and scripts)
       containerRef.current.innerHTML = widget.html_content;
 
       // Execute scripts by re-creating them

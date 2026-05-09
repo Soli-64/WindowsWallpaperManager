@@ -88,7 +88,7 @@ export default function SwitchBarApp() {
   };
 
   return (
-    <div className="switch-bar-container">
+    <div onContextMenu={(e ) => {e.preventDefault(); e.stopPropagation();}} className="switch-bar-container">
       <div 
         className="scroll-area" 
         ref={scrollRef} 
