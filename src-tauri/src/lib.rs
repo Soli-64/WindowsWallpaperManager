@@ -5,7 +5,7 @@ use storage::{
     ensure_storage_initialized, get_shortcut, list_files_recursive, load_config, save_config,
     wallpapers_dir, widgets_config_path, widgets_dir,
 };
-use tauri::{Manager, Position, Size, WebviewUrl, WebviewWindowBuilder};
+use tauri::{Manager, WebviewUrl, WebviewWindowBuilder};
 use tauri_plugin_wallpaper::{AttachRequest, WallpaperExt};
 use thumbnail::ThumbnailManager;
 use notify::{Watcher, RecursiveMode};
@@ -233,6 +233,7 @@ pub fn run() {
 
             //
             // Tray menu
+            // Includes next, previous, open wallpapers folder, open settings and quit the app
             //
             let quit_i = MenuItem::with_id(app, "quit", "Quit", true, None::<&str>)?;
             let show_i = MenuItem::with_id(app, "show", "Open Wallpaper Bar", true, None::<&str>)?;
@@ -312,19 +313,14 @@ pub fn run() {
 
             //
             // Monitors handler
-            // Create multiple windows to match every screen
+            // Create multiple windows to match every screen, adapting to sizes and positions
             //
             let monitors = app.available_monitors().unwrap();
 
-            let mut base_x = 0;
-            let mut base_y = 0;
+            let min_x = monitors.iter().map(|m| m.position().x).min().unwrap_or(0);
+            let min_y = monitors.iter().map(|m| m.position().y).min().unwrap_or(0);
 
             for (i, monitor) in monitors.iter().enumerate() {
-                
-                if monitor.name().unwrap().ends_with("1") {
-                    base_x -= monitor.position().x;
-                    base_y -= monitor.position().y;
-                }
 
                 println!(
                     "Monitor: {}",
@@ -332,6 +328,9 @@ pub fn run() {
                 );
 
                 let label = format!("wallpaper-{}", i);
+                let pos = monitor.position();
+                let size = monitor.size();
+
                 println!(
                     "Creating window {} for monitor: {}x{} @ ({},{})",
                     label,
@@ -341,39 +340,23 @@ pub fn run() {
                     monitor.position().y
                 );
 
+                //
+                // Building the webview adapted to the monitor
+                //
                 let window =
                     WebviewWindowBuilder::new(app, &label, WebviewUrl::App("index.html".into()))
                         .title(&format!("Wallpaper Bar {}", i))
-                        .decorations(true)
+                        .decorations(false)
                         .transparent(true)
                         .resizable(false)
                         .visible(false)
-                        // .fullscreen(true)
+                        .fullscreen(false)
+                        // Changed the sizing and positioning in build to avoid some multi-screen errors
+                        // and scale it down 
+                        .inner_size(size.width as f64 / monitor.scale_factor(), size.height as f64 / monitor.scale_factor())
+                        .position((pos.x - min_x) as f64 / monitor.scale_factor(), (pos.y - min_y) as f64 / monitor.scale_factor())
                         .build()?;
 
-                let pos = monitor.position();
-                let size = monitor.size();
-
-                // Center the window on that monitor
-                println!(
-                    "Base position: {}x{}",
-                    base_x,
-                    base_y
-                );
-                println!(
-                    "Displaying at Position: {}x{}",
-                    pos.x + base_x,
-                    pos.y + base_y
-                );
-                window.set_position(tauri::PhysicalPosition {
-                    x: base_x + pos.x - 10,
-                    y: pos.y - 40, 
-                })?;
-
-                window.set_size(tauri::PhysicalSize {
-                    width: size.width,
-                    height: size.height,
-                })?;
                 window.show()?;
 
                 // Attach as wallpaper
