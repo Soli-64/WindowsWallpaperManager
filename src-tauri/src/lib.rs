@@ -205,6 +205,7 @@ pub fn run() {
                 .build(),
         )
         .setup(|app| {
+            
             // Storage
             ensure_storage_initialized();
 
@@ -348,6 +349,7 @@ pub fn run() {
                         .title(&format!("Wallpaper Bar {}", i))
                         .decorations(false)
                         .transparent(true)
+                        .shadow(false)
                         .resizable(false)
                         .visible(false)
                         .fullscreen(false)
