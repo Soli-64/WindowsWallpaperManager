@@ -1,0 +1,46 @@
+{
+    "last_wallpaper": "path/to/last/wallpaper",
+    "shortcut" : "alt+w",
+    "active_setup_name": "MySetup1",
+    "setups": [
+        // This setup is an example of 2 monitors
+        {
+            "name": "MySetup1",
+            "monitors": [
+                {
+                    // Monitors on Windows are detected under the form \\.\DISPLAYx with x starting from 1
+                    "monitor_index": 1, 
+                    "wallpaper_path": "path/to/wallpaper/for/monitor/1",
+                    // id from the list in widgets.json
+                    "active_widgets": ["clock", "weather"]
+                },
+                {
+                    "monitor_index": 2,
+                    "wallpaper_path": "path/to/wallpaper/for/monitor/2",
+                    "active_widgets": []
+                }
+            ]
+        },
+        // Here's an example of 3 monitors
+        {
+            "name": "MySetup2",
+            "monitors": [
+                {
+                    "monitor_index": 1, 
+                    "wallpaper_path": "path/to/wallpaper/for/monitor/1",
+                    "active_widgets": ["clock", "weather"]
+                },
+                {
+                    "monitor_index": 2,
+                    "wallpaper_path": "path/to/wallpaper/for/monitor/2",
+                    "active_widgets": []
+                },
+                {
+                    "monitor_index": 3,
+                    "wallpaper_path": "path/to/wallpaper/for/monitor/3",
+                    "active_widgets": []
+                }
+            ]
+        }
+    ]
+}

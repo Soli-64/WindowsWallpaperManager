@@ -1,10 +1,50 @@
 use dirs;
+use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
 use std::path::PathBuf;
 use walkdir::WalkDir;
 
 //
-// Init different storage paths and dir.s
+// Data Structures
+//
+
+#[derive(Debug, Serialize, Deserialize, Clone)]
+pub struct MonitorConfig {
+    pub monitor_index: u32,
+    pub wallpaper_path: String,
+    pub active_widgets: Vec<String>,
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone)]
+pub struct Setup {
+    pub name: String,
+    pub monitors: Vec<MonitorConfig>,
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+pub struct AppConfig {
+    pub last_wallpaper: Option<String>,
+    pub shortcut: String,
+    pub active_setup_name: String,
+    pub setups: Vec<Setup>,
+}
+
+impl Default for AppConfig {
+    fn default() -> Self {
+        AppConfig {
+            last_wallpaper: None,
+            shortcut: "alt+w".to_string(),
+            active_setup_name: "Default".to_string(),
+            setups: vec![Setup {
+                name: "Default".to_string(),
+                monitors: vec![],
+            }],
+        }
+    }
+}
+
+//
+// Init different storage paths and dirs
 //
 
 pub fn wallpapers_dir() -> PathBuf {
@@ -29,7 +69,7 @@ pub fn widgets_dir() -> PathBuf {
 }
 
 //
-// Ensure required directories exist
+// Ensure required directories exist and create default configs
 //
 pub fn ensure_storage_initialized() {
     let w_dir = wallpapers_dir();
@@ -44,6 +84,90 @@ pub fn ensure_storage_initialized() {
     }
     if !wg_dir.exists() {
         std::fs::create_dir_all(&wg_dir).unwrap();
+    }
+
+    ensure_config_initialized();
+    ensure_widgets_config_initialized();
+}
+
+fn ensure_config_initialized() {
+    let config_path = config_file_path();
+    if !config_path.exists() {
+        if let Some(last_wallpaper) = load_legacy_wallpaper() {
+            let config = AppConfig {
+                last_wallpaper: Some(last_wallpaper),
+                shortcut: get_legacy_shortcut(),
+                active_setup_name: "Default".to_string(),
+                setups: vec![Setup {
+                    name: "Default".to_string(),
+                    monitors: vec![],
+                }],
+            };
+            save_app_config(config);
+        } else {
+            let config = AppConfig::default();
+            save_app_config(config);
+        }
+    }
+}
+
+fn ensure_widgets_config_initialized() {
+    let widgets_path = widgets_config_path();
+    if !widgets_path.exists() {
+        let default_widgets = json!({
+            "widgets": []
+        });
+        if let Ok(json_str) = serde_json::to_string_pretty(&default_widgets) {
+            let _ = std::fs::write(widgets_path, json_str);
+        }
+    }
+}
+
+fn load_legacy_wallpaper() -> Option<String> {
+    let config_path = config_file_path();
+    if config_path.exists() {
+        if let Ok(content) = std::fs::read_to_string(&config_path) {
+            if let Ok(val) = serde_json::from_str::<Value>(&content) {
+                return val
+                    .get("last_wallpaper")
+                    .and_then(|v| v.as_str())
+                    .map(|s| s.to_string());
+            }
+        }
+    }
+    None
+}
+
+fn get_legacy_shortcut() -> String {
+    let config_path = config_file_path();
+    if config_path.exists() {
+        if let Ok(content) = std::fs::read_to_string(&config_path) {
+            if let Ok(val) = serde_json::from_str::<Value>(&content) {
+                return val
+                    .get("shortcut")
+                    .and_then(|v| v.as_str())
+                    .map(|s| s.to_string())
+                    .unwrap_or_else(|| "alt+w".to_string());
+            }
+        }
+    }
+    "alt+w".to_string()
+}
+
+pub fn load_app_config() -> AppConfig {
+    let config_path = config_file_path();
+    if let Ok(content) = std::fs::read_to_string(&config_path) {
+        if let Ok(config) = serde_json::from_str::<AppConfig>(&content) {
+            return config;
+        }
+    }
+    AppConfig::default()
+}
+
+pub fn save_app_config(config: AppConfig) {
+    let config_path = config_file_path();
+    if let Ok(json_str) = serde_json::to_string_pretty(&config) {
+        let _ = std::fs::write(config_path, json_str);
     }
 }
 
@@ -91,19 +215,111 @@ pub fn get_config_value(key: &str) -> Option<Value> {
     config.get(key).cloned()
 }
 
-// Backward compatibility with previous version (alpha, might be removed in the future)
+// Backward compatibility - save to both legacy and new structure
 pub fn save_config(path: String) {
-    set_config_value("last_wallpaper", json!(path));
+    let mut config = load_app_config();
+    config.last_wallpaper = Some(path.clone());
+
+    if let Some(setup) = config
+        .setups
+        .iter_mut()
+        .find(|s| s.name == config.active_setup_name)
+    {
+        if let Some(monitor) = setup.monitors.iter_mut().find(|m| m.monitor_index == 1) {
+            monitor.wallpaper_path = path;
+        }
+    }
+
+    save_app_config(config);
 }
 
 pub fn load_config() -> Option<String> {
-    get_config_value("last_wallpaper").and_then(|v| v.as_str().map(|s| s.to_string()))
+    load_app_config().last_wallpaper
 }
 
 pub fn get_shortcut() -> String {
-    get_config_value("shortcut")
-        .and_then(|v| v.as_str().map(|s| s.to_string().to_lowercase()))
-        .unwrap_or_else(|| "alt+w".to_string())
+    load_app_config().shortcut
+}
+
+pub fn get_active_setup() -> Option<Setup> {
+    let config = load_app_config();
+    config
+        .setups
+        .into_iter()
+        .find(|s| s.name == config.active_setup_name)
+}
+
+pub fn set_active_setup(name: String) {
+    let mut config = load_app_config();
+    config.active_setup_name = name;
+    save_app_config(config);
+}
+
+pub fn get_monitor_config(monitor_index: u32) -> MonitorConfig {
+    let setup = get_active_setup();
+    if let Some(s) = setup {
+        if let Some(mc) = s
+            .monitors
+            .into_iter()
+            .find(|m| m.monitor_index == monitor_index)
+        {
+            return mc;
+        }
+    }
+    MonitorConfig {
+        monitor_index,
+        wallpaper_path: String::new(),
+        active_widgets: vec![],
+    }
+}
+
+pub fn set_monitor_wallpaper(monitor_index: u32, path: String) {
+    let mut config = load_app_config();
+    if let Some(setup) = config
+        .setups
+        .iter_mut()
+        .find(|s| s.name == config.active_setup_name)
+    {
+        if let Some(monitor) = setup
+            .monitors
+            .iter_mut()
+            .find(|m| m.monitor_index == monitor_index)
+        {
+            monitor.wallpaper_path = path.clone();
+        } else {
+            setup.monitors.push(MonitorConfig {
+                monitor_index,
+                wallpaper_path: path.clone(),
+                active_widgets: vec![],
+            });
+        }
+    }
+    config.last_wallpaper = Some(path);
+    save_app_config(config);
+}
+
+pub fn set_monitor_widgets(monitor_index: u32, widgets: Vec<String>) {
+    let mut config = load_app_config();
+    if let Some(setup) = config
+        .setups
+        .iter_mut()
+        .find(|s| s.name == config.active_setup_name)
+    {
+        if let Some(monitor) = setup
+            .monitors
+            .iter_mut()
+            .find(|m| m.monitor_index == monitor_index)
+        {
+            monitor.active_widgets = widgets;
+        } else {
+            setup.monitors.push(MonitorConfig {
+                monitor_index,
+                wallpaper_path: String::new(),
+                active_widgets: widgets,
+            });
+        }
+    }
+    save_app_config(config);
 }
 
 //

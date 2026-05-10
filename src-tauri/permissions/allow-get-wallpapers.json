@@ -40,6 +40,86 @@
         ],
         "deny": []
       }
+    },
+    {
+      "identifier": "allow-get-monitors",
+      "description": "Allow getting monitors",
+      "commands": {
+        "allow": [
+          "get_monitors"
+        ],
+        "deny": []
+      }
+    },
+    {
+      "identifier": "allow-get-monitor-wallpaper",
+      "description": "Allow getting monitor wallpaper",
+      "commands": {
+        "allow": [
+          "get_monitor_wallpaper"
+        ],
+        "deny": []
+      }
+    },
+    {
+      "identifier": "allow-set-monitor-wallpaper",
+      "description": "Allow setting monitor wallpaper",
+      "commands": {
+        "allow": [
+          "set_monitor_wallpaper"
+        ],
+        "deny": []
+      }
+    },
+    {
+      "identifier": "allow-get-monitor-widgets",
+      "description": "Allow getting monitor widgets",
+      "commands": {
+        "allow": [
+          "get_monitor_widgets"
+        ],
+        "deny": []
+      }
+    },
+    {
+      "identifier": "allow-set-monitor-widgets",
+      "description": "Allow setting monitor widgets",
+      "commands": {
+        "allow": [
+          "set_monitor_widgets"
+        ],
+        "deny": []
+      }
+    },
+    {
+      "identifier": "allow-get-active-setup",
+      "description": "Allow getting active setup",
+      "commands": {
+        "allow": [
+          "get_active_setup"
+        ],
+        "deny": []
+      }
+    },
+    {
+      "identifier": "allow-set-active-setup",
+      "description": "Allow setting active setup",
+      "commands": {
+        "allow": [
+          "set_active_setup"
+        ],
+        "deny": []
+      }
+    },
+    {
+      "identifier": "allow-refresh-app",
+      "description": "Allow refreshing app",
+      "commands": {
+        "allow": [
+          "refresh_app"
+        ],
+        "deny": []
+      }
     }
   ]
 }

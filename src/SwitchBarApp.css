@@ -66,3 +66,97 @@
   justify-content: center;
   pointer-events: none; /* Let clicks pass through to to parent */
 }
+
+.switch-bar-header {
+  position: absolute;
+  top: 12px;
+  left: 12px;
+  right: 12px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  z-index: 100;
+}
+
+.monitor-select {
+  background-color: rgba(40, 40, 40, 0.9);
+  color: white;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 4px;
+  padding: 8px 12px;
+  font-size: 14px;
+  cursor: pointer;
+}
+
+.monitor-select:focus {
+  outline: none;
+  border-color: rgba(255, 255, 255, 0.4);
+}
+
+.mode-toggle {
+  display: flex;
+  background-color: rgba(40, 40, 40, 0.9);
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.mode-btn {
+  background: transparent;
+  color: rgba(255, 255, 255, 0.7);
+  border: none;
+  padding: 8px 16px;
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.mode-btn:hover {
+  color: white;
+}
+
+.mode-btn.active {
+  background-color: rgba(100, 100, 255, 0.8);
+  color: white;
+}
+
+.widgets-grid {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: row;
+  flex-wrap: nowrap;
+  overflow-x: auto;
+  align-items: center;
+  gap: 12px;
+  padding: 0 24px;
+}
+
+.widget-item {
+  width: 20%;
+  min-width: 20%;
+  height: 60%;
+  flex-shrink: 0;
+  background-color: rgba(40, 40, 40, 0.8);
+  border: 2px solid transparent;
+  border-radius: 4px;
+  padding: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.widget-item:hover {
+  background-color: rgba(60, 60, 60, 0.8);
+}
+
+.widget-item.active {
+  border-color: rgba(100, 150, 255, 0.8);
+}
+
+.widget-name {
+  color: white;
+  font-size: 12px;
+  text-align: center;
+}

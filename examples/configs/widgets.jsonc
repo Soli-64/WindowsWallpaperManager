@@ -1,0 +1,12 @@
+[
+  {
+    "id": "clock",
+    "name": "Digital Clock",
+    "html_file": "clock.html"
+  },
+  {
+    "id": "weather",
+    "name": "Weather",
+    "html_file": "weather.html"
+  }
+]

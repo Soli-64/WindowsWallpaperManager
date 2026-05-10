@@ -18,10 +18,8 @@ function WidgetComponent({ widget }: { widget: Widget }) {
 
   useEffect(() => {
     if (containerRef.current) {
-      // Inject HTML (which already contains styles and scripts)
       containerRef.current.innerHTML = widget.html_content;
 
-      // Execute scripts by re-creating them
       const scripts = containerRef.current.querySelectorAll("script");
       scripts.forEach((oldScript) => {
         const newScript = document.createElement("script");
@@ -40,6 +38,8 @@ function WidgetComponent({ widget }: { widget: Widget }) {
 function App() {
   const [wallpaperPath, setWallpaperPath] = useState<string | null>(null);
   const [widgets, setWidgets] = useState<Widget[]>([]);
+  const [activeWidgets, setActiveWidgets] = useState<string[]>([]);
+  const [monitorIndex, setMonitorIndex] = useState<number>(1);
 
   const isVideo = (path: string) => {
     const ext = path.split('.').pop()?.toLowerCase();
@@ -47,12 +47,19 @@ function App() {
   };
 
   useEffect(() => {
-    // Get wallpaper
-    invoke<string>("get_default_wallpaper").then((path) => {
+    const url = new URL(window.location.href);
+    const label = url.searchParams.get("label") || "wallpaper-0";
+    const idx = parseInt(label.replace("wallpaper-", ""), 10) + 1;
+    setMonitorIndex(idx);
+
+    invoke<string>(`get_monitor_wallpaper`, { monitorIndex: idx }).then((path) => {
       if (path) setWallpaperPath(path);
     });
 
-    // Get widgets
+    invoke<string[]>(`get_monitor_widgets`, { monitorIndex: idx }).then((active) => {
+      setActiveWidgets(active || []);
+    });
+
     invoke<Widget[]>("get_widgets")
       .then((data) => {
         setWidgets(data);
@@ -60,7 +67,7 @@ function App() {
       .catch((err) => console.error("Failed to load widgets:", err));
 
     const setupListener = async () => {
-      const unlistenWallpaper = await listen<string>("update-wallpaper", (event) => {
+      const unlistenWallpaper = await listen<string>(`update-monitor-${idx}`, (event) => {
         console.log("New wallpaper:", event.payload);
         setWallpaperPath(event.payload);
       });
@@ -72,6 +79,9 @@ function App() {
             setWidgets(data);
           })
           .catch((err) => console.error("Failed to reload widgets:", err));
+        invoke<string[]>(`get_monitor_widgets`, { monitorIndex: idx }).then((active) => {
+          setActiveWidgets(active || []);
+        });
       });
 
       return () => {
@@ -85,6 +95,8 @@ function App() {
       cleanup.then(unlisten => unlisten());
     };
   }, []);
+
+  const filteredWidgets = widgets.filter(w => activeWidgets.includes(w.id));
 
   return (
     <main className="container">
@@ -108,9 +120,8 @@ function App() {
         )
       )}
 
-      {/* Widgets Layer */}
       <div className="widgets-layer">
-        {widgets.map((widget) => (
+        {filteredWidgets.map((widget) => (
           <WidgetComponent key={widget.id} widget={widget} />
         ))}
       </div>
