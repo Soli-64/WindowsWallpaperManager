@@ -56,10 +56,10 @@ impl ThumbnailManager {
         Ok(thumb_path)
     }
 
-    // 
+    //
     // Extract single frame from video using ffmpeg (scalable)
     // Used for thumbnail generation
-    // 
+    //
     fn extract_video_frame(
         &self,
         video_path: &PathBuf,

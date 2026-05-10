@@ -1,6 +1,7 @@
 mod storage;
 mod thumbnail;
 
+use notify::{RecursiveMode, Watcher};
 use storage::{
     ensure_storage_initialized, get_shortcut, list_files_recursive, load_config, save_config,
     wallpapers_dir, widgets_config_path, widgets_dir,
@@ -8,16 +9,15 @@ use storage::{
 use tauri::{Manager, Position, Size, WebviewUrl, WebviewWindowBuilder};
 use tauri_plugin_wallpaper::{AttachRequest, WallpaperExt};
 use thumbnail::ThumbnailManager;
-use notify::{Watcher, RecursiveMode};
 
 #[tauri::command]
 fn set_wallpaper_config(path: String) {
     save_config(path);
 }
 
-// 
+//
 // Get default wallpaper (from config or fallback)
-// 
+//
 #[tauri::command]
 fn get_default_wallpaper() -> String {
     if let Some(path) = load_config() {
@@ -26,7 +26,6 @@ fn get_default_wallpaper() -> String {
         }
     }
 
-    // Fallback: first available wallpaper
     let w_dir = wallpapers_dir();
     let files = list_files_recursive(w_dir, 1, Some(&["jpg", "jpeg", "png", "mp4", "webm"]));
     if let Some(first) = files.first() {
@@ -53,9 +52,9 @@ pub struct Widget {
     html_content: String,
 }
 
-// 
+//
 // Get list of widgets (from widgets.json, loads and parse html files content)
-// 
+//
 #[tauri::command]
 fn get_widgets() -> Result<Vec<Widget>, String> {
     let config_path = widgets_config_path();
@@ -77,7 +76,7 @@ fn get_widgets() -> Result<Vec<Widget>, String> {
     Ok(widgets)
 }
 
-// 
+//
 // Get list of wallpapers (recursive w/ limited depth)
 // Checks media format, creates thumbnails if needed, and returns list of wallpapers
 //
@@ -124,33 +123,55 @@ fn get_wallpapers() -> Vec<WallpaperItem> {
     items
 }
 
+use tauri::menu::{MenuBuilder, MenuItem, PredefinedMenuItem};
+use tauri::tray::{MouseButton, MouseButtonState, TrayIconBuilder, TrayIconEvent};
+use tauri::Emitter;
 use tauri_plugin_global_shortcut::Shortcut;
 use tauri_plugin_global_shortcut::{GlobalShortcutExt, ShortcutState};
-use tauri::tray::{MouseButton, MouseButtonState, TrayIconBuilder, TrayIconEvent};
-use tauri::menu::{MenuBuilder, MenuItem, PredefinedMenuItem};
-use tauri::Emitter;
 
-// 
-// Cycle through wallpapers for next/previous wallpaper events 
+//
+// Cycle through wallpapers for next/previous wallpaper events
 // (only in tray menu, upcoming global shortcut for full keyboard UX)
 //
 fn cycle_wallpaper(app: &tauri::AppHandle, forward: bool) {
     let wallpapers = get_wallpapers();
-    if wallpapers.is_empty() { return; }
-    
+    if wallpapers.is_empty() {
+        return;
+    }
+
     let current = get_default_wallpaper();
-    let mut current_idx = wallpapers.iter().position(|w| w.path == current).unwrap_or(0);
-    
+    let mut current_idx = wallpapers
+        .iter()
+        .position(|w| w.path == current)
+        .unwrap_or(0);
+
     if forward {
         current_idx = (current_idx + 1) % wallpapers.len();
     } else {
-        current_idx = if current_idx == 0 { wallpapers.len() - 1 } else { current_idx - 1 };
+        current_idx = if current_idx == 0 {
+            wallpapers.len() - 1
+        } else {
+            current_idx - 1
+        };
     }
-    
+
     let next_wp = &wallpapers[current_idx];
-    
+
     let _ = app.emit("update-wallpaper", next_wp.path.clone());
     save_config(next_wp.path.clone());
+}
+
+fn refresh_config(app: &tauri::AppHandle) {
+    let current = get_default_wallpaper();
+    if !current.is_empty() {
+        let _ = app.emit("update-wallpaper", current);
+    }
+    let _ = app.emit("update-widgets", ());
+}
+
+#[tauri::command]
+fn refresh_app(app: tauri::AppHandle) {
+    refresh_config(&app);
 }
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
@@ -180,7 +201,6 @@ pub fn run() {
                                 active_shortcut
                             );
 
-
                             // Toggle switch-bar visibility
                             if let Some(window) = app.get_webview_window("switch-bar") {
                                 let is_visible = window.is_visible().unwrap_or(false);
@@ -205,7 +225,6 @@ pub fn run() {
                 .build(),
         )
         .setup(|app| {
-            
             // Storage
             ensure_storage_initialized();
 
@@ -213,21 +232,28 @@ pub fn run() {
 
             //
             // Widgets Watcher
-            // Seems to be problems some with setIntervals, might need a  
+            // Seems to be problems some with setIntervals, might need a
             // restart when modifying asynchonous widgets scripts
             //
-            let mut watcher = notify::recommended_watcher(move |res: notify::Result<notify::Event>| {
-                match res {
+            let mut watcher =
+                notify::recommended_watcher(move |res: notify::Result<notify::Event>| match res {
                     Ok(event) => {
-                        if event.kind.is_modify() || event.kind.is_create() || event.kind.is_remove() {
+                        if event.kind.is_modify()
+                            || event.kind.is_create()
+                            || event.kind.is_remove()
+                        {
                             let _ = app_handle.emit("update-widgets", ());
                         }
-                    },
+                    }
                     Err(e) => println!("watch error: {:?}", e),
-                }
-            }).expect("Failed to create watcher");
+                })
+                .expect("Failed to create watcher");
 
-            watcher.watch(std::path::Path::new(&widgets_dir()), RecursiveMode::Recursive)
+            watcher
+                .watch(
+                    std::path::Path::new(&widgets_dir()),
+                    RecursiveMode::Recursive,
+                )
                 .expect("Failed to watch widgets directory");
 
             app.manage(std::sync::Mutex::new(watcher));
@@ -240,11 +266,28 @@ pub fn run() {
             let show_i = MenuItem::with_id(app, "show", "Open Wallpaper Bar", true, None::<&str>)?;
             let next_i = MenuItem::with_id(app, "next", "Next Wallpaper", true, None::<&str>)?;
             let prev_i = MenuItem::with_id(app, "prev", "Previous Wallpaper", true, None::<&str>)?;
-            let open_dir_i = MenuItem::with_id(app, "open_dir", "Open Wallpapers Folder", true, None::<&str>)?;
+            let refresh_i =
+                MenuItem::with_id(app, "refresh", "Refresh Config", true, None::<&str>)?;
+            let open_dir_i = MenuItem::with_id(
+                app,
+                "open_dir",
+                "Open Wallpapers Folder",
+                true,
+                None::<&str>,
+            )?;
             let sep = PredefinedMenuItem::separator(app)?;
 
             let menu = MenuBuilder::new(app)
-                .items(&[&show_i, &next_i, &prev_i, &sep, &open_dir_i, &sep, &quit_i])
+                .items(&[
+                    &show_i,
+                    &next_i,
+                    &prev_i,
+                    &sep,
+                    &refresh_i,
+                    &open_dir_i,
+                    &sep,
+                    &quit_i,
+                ])
                 .build()?;
 
             let tray_builder = if let Some(icon) = app.default_window_icon() {
@@ -256,31 +299,35 @@ pub fn run() {
             let _tray = tray_builder
                 .tooltip("WinWallpaper")
                 .menu(&menu)
-                .on_menu_event(|app, event| {
-                    match event.id.as_ref() {
-                        "quit" => {
-                            app.exit(0);
-                        }
-                        "show" => {
-                            if let Some(window) = app.get_webview_window("switch-bar") {
-                                window.show().unwrap();
-                                window.set_ignore_cursor_events(false).unwrap();
-                                window.set_focus().unwrap();
-                                let _ = window.eval("window.focus();");
-                            }
-                        }
-                        "next" => cycle_wallpaper(app, true),
-                        "prev" => cycle_wallpaper(app, false),
-                        "open_dir" => {
-                            let _ = std::process::Command::new("explorer")
-                                .arg(wallpapers_dir())
-                                .spawn();
-                        }
-                        _ => {}
+                .on_menu_event(|app, event| match event.id.as_ref() {
+                    "quit" => {
+                        app.exit(0);
                     }
+                    "show" => {
+                        if let Some(window) = app.get_webview_window("switch-bar") {
+                            window.show().unwrap();
+                            window.set_ignore_cursor_events(false).unwrap();
+                            window.set_focus().unwrap();
+                            let _ = window.eval("window.focus();");
+                        }
+                    }
+                    "next" => cycle_wallpaper(app, true),
+                    "prev" => cycle_wallpaper(app, false),
+                    "refresh" => refresh_config(app),
+                    "open_dir" => {
+                        let _ = std::process::Command::new("explorer")
+                            .arg(wallpapers_dir())
+                            .spawn();
+                    }
+                    _ => {}
                 })
                 .on_tray_icon_event(|tray, event| {
-                    if let TrayIconEvent::Click { button, button_state, .. } = event {
+                    if let TrayIconEvent::Click {
+                        button,
+                        button_state,
+                        ..
+                    } = event
+                    {
                         if button == MouseButton::Left && button_state == MouseButtonState::Up {
                             let app = tray.app_handle();
                             if let Some(window) = app.get_webview_window("switch-bar") {
@@ -322,7 +369,6 @@ pub fn run() {
             let min_y = monitors.iter().map(|m| m.position().y).min().unwrap_or(0);
 
             for (i, monitor) in monitors.iter().enumerate() {
-
                 println!(
                     "Monitor: {}",
                     monitor.name().expect("Monitor name not found").as_str()
@@ -354,13 +400,13 @@ pub fn run() {
                         .visible(false)
                         .fullscreen(false)
                         // Changed the sizing and positioning in build to avoid some multi-screen errors
-                        // and scale it down 
+                        // and scale it down
                         .build()?;
 
                 window.set_size(Size::Physical(size.clone()))?;
-                window.set_position(Position::Physical(tauri::PhysicalPosition { 
-                    x: pos.x - min_x, 
-                    y: pos.y - min_y 
+                window.set_position(Position::Physical(tauri::PhysicalPosition {
+                    x: pos.x - min_x,
+                    y: pos.y - min_y,
                 }))?;
 
                 window.show()?;
@@ -377,7 +423,8 @@ pub fn run() {
             get_wallpapers,
             set_wallpaper_config,
             get_default_wallpaper,
-            get_widgets
+            get_widgets,
+            refresh_app
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

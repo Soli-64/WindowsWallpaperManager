@@ -28,9 +28,9 @@ pub fn widgets_dir() -> PathBuf {
         .join("widgets")
 }
 
-// 
+//
 // Ensure required directories exist
-// 
+//
 pub fn ensure_storage_initialized() {
     let w_dir = wallpapers_dir();
     let t_dir = thumb_dir();
@@ -106,9 +106,9 @@ pub fn get_shortcut() -> String {
         .unwrap_or_else(|| "alt+w".to_string())
 }
 
-// 
+//
 // List files recursively with depth limit and file extension filter (optional)
-// 
+//
 pub fn list_files_recursive(
     dir: PathBuf,
     depth: usize,
