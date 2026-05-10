@@ -1,103 +1,109 @@
-# Windows Wallpaper Manager
+# WinWallpaper
 
-A native Windows wallpaper manager built with Tauri v2 and React. It provides a seamless experience for setting both images and videos as your system wallpaper across multiple monitors.
+A powerful, native Windows wallpaper manager built with **Tauri v2** and **React**. WinWallpaper turns your desktop into a dynamic canvas, supporting high-performance video backgrounds, custom HTML widgets, and multi-monitor configurations with a sleek, modern interface.
 
-## Features
+## ✨ Features
 
-- Multi-Monitor Support: Automatically detects all active monitors and creates dedicated background windows for each.
-- Media Support: Supports standard image formats and video files (MP4, WebM).
-- Automatic Thumbnails: Generates and caches thumbnails for all media types using FFmpeg.
-- Widgets Support: Overlay custom HTML/CSS/JS widgets onto your desktop wallpaper with live-reloading.
-- Global Shortcut: Toggle the selection interface at any time (Default: Alt + W, configurable in config.json).
-- Session Persistence: Remembers and reloads your last selected wallpaper on startup.
-- System Tray Integration: Right-click the tray icon for quick access to app controls, cycling wallpapers, or quitting the app.
-- Performance: Built with Rust and React for a lightweight and responsive experience.
+- **Dual-Mode System**:
+  - **Setup Mode**: Apply predefined, static configurations across all your monitors with one click.
+  - **Custom Mode**: Manually fine-tune wallpapers and widgets for each monitor individually.
+- **Dynamic Media Support**: Seamlessly set images (JPG, PNG) or high-quality videos (MP4, WebM) as your desktop background.
+- **HTML Widgets**: Overlay custom HTML/CSS/JS widgets (clocks, weather, system monitors) directly on your wallpaper. Supports **Live Reloading**—edits to your widget files appear instantly!
+- **Multi-Monitor Optimized**: Automatically detects all displays and creates independent, synchronized background layers for each.
+- **Sleek Control Bar**: A "Switch Bar" interface accessible via global shortcut, featuring a modern design with horizontal drag-scroll navigation.
+- **System Tray Integration**: Persistent access to app controls, setup switching, and quick actions via the Windows system tray.
+- **Global Shortcuts**: Toggle the management interface instantly (Default: `Alt + W`, fully configurable).
+- **Performance First**: Built with **Rust** and **React** for minimal resource usage and maximum responsiveness.
 
-## Prerequisites
+## 🚀 Getting Started
 
-- Rust (latest stable version)
-- Node.js (v18 or newer)
-- FFmpeg (must be available in your system PATH for video thumbnail generation)
+### Prerequisites
 
-## Installation
+- **Rust**: Latest stable version.
+- **Node.js**: v18 or newer.
+- **FFmpeg**: Required for video thumbnail generation (must be in your system `PATH`).
 
-1. Clone the repository.
-2. Install the frontend dependencies:
+### Installation
+
+1. Clone the repository:
+   ```bash
+   git clone https://github.com/Soli-64/WinWallpaper.git
+   ```
+2. Install dependencies:
    ```bash
    npm install
    ```
 
-## Development
+### Development & Build
 
-To run the application in development mode:
+Run in development mode:
 ```bash
 npm run tauri dev
 ```
 
-## Build
-
-To create a production build:
+Create a production build:
 ```bash
 npm run tauri build
 ```
 
-## Configuration and Storage
+## 📂 Configuration & Storage
 
-The application stores all data in your Documents folder under the `win-wallpaper` directory:
+WinWallpaper keeps its data organized in your **Documents** folder under `win-wallpaper/`:
 
-- Wallpapers: Place your media files in `~/Documents/win-wallpaper/wallpapers`.
-- Thumbnails: Automatically generated in `~/Documents/win-wallpaper/thumbnails`.
-- Widgets: Place widget HTML files in `~/Documents/win-wallpaper/widgets`.
-- Settings: Last used settings and keyboard shortcut are stored in `~/Documents/win-wallpaper/config.json`.
-- Widgets Configuration: Configure active widgets in `~/Documents/win-wallpaper/widgets.json`.
+- `/wallpapers`: Place your image and video files here.
+- `/widgets`: Store your custom HTML widget files here.
+- `/thumbnails`: Automatically managed cache for media previews.
+- `config.json`: Stores your global settings, keyboard shortcuts, and saved setups.
+- `widgets.json`: Defines the metadata for your available widgets.
 
-## Widgets
+## 🛠️ Widgets System
 
-WinWallpaper supports overlaying custom widgets on top of your wallpaper. Widgets are simple HTML files that can contain CSS and JavaScript.
+WinWallpaper widgets are standard web pages. You can build anything using HTML, CSS, and JavaScript.
 
-**How to use:**
-1. Create your widget HTML file in the `~/Documents/win-wallpaper/widgets` directory. (See our [Clock Widget Example](examples/widget/clock.html) to get started!)
-2. Define the widget in `~/Documents/win-wallpaper/widgets.json`:
+1. Create a `.html` file in the `widgets/` folder.
+2. Register it in `widgets.json`:
    ```json
    [
      {
-       "id": "my-clock-widget",
-       "name": "Desktop Clock",
+       "id": "my-clock",
+       "name": "Minimal Clock",
        "html_file": "clock.html"
      }
    ]
    ```
-3. **Live Reloading**: WinWallpaper watches the `widgets` directory for changes. Any edits you save to your widget files will instantly reload on your desktop without needing to restart the app!
+3. Use the **Custom Mode** in the Switch Bar to toggle the widget on any of your monitors.
 
-## Usage
+*Check out our [Clock Widget Example](examples/widget/clock.html) to get started!*
 
-1. Place your desired images or videos in the wallpapers directory.
-2. Launch the application.
-3. Use the selection bar at the bottom to switch wallpapers.
-4. Press the global shortcut (Default: Alt + W) to hide or show the selection bar.
+## ⌨️ Shortcuts
 
-## Screenshots & Demo
+- **Toggle Switch Bar**: `Alt + W` (Default)
+- **Cycle Setup**: Accessible via System Tray
+- **Custom Shortcuts**: Define your own keys in `config.json`.
 
-![Screenshot](docs/media/screenshot_1.png)
+## 📸 Screenshots
 
-### Demo Video
+![Switch Bar Interface](docs/media/screenshot_1.png)
 
-![Demo](docs/media/present_1.gif)
+## ⚠️ Known Issues
 
+- **Launch on Startup**: The automatic startup hook may require administrative permissions or manual activation in the Windows Startup settings depending on your environment.
+- **Video Thumbnails**: If video previews don't appear, ensure FFmpeg is correctly installed and accessible in your terminal.
 
-## Known Issues
+## 🤝 Contributing
 
-- **Launch on Startup**: The "Launch on Startup" feature may not function correctly in some environments due to registry permission limitations or installer configuration. If the application doesn't start with Windows, activate the launch on startup option in the settings.
-- **Video Thumbnails**: Video thumbnails require FFmpeg to be installed and available in your system PATH. If you just installed FFmpeg via the installer, a system restart may be required for the PATH changes to take effect.
+Contributions are what make the open-source community such an amazing place to learn, inspire, and create. Any contributions you make are **greatly appreciated**.
 
-## Contributing
+1. Fork the Project
+2. Create your Feature Branch (`git checkout -b feature/AmazingFeature`)
+3. Commit your Changes (`git commit -m 'Add some AmazingFeature'`)
+4. Push to the Branch (`git push origin feature/AmazingFeature`)
+5. Open a Pull Request
 
-Contributions are welcome! If you'd like to improve WinWallpaper, please feel free to submit a Pull Request or open an issue.
+## 💖 Support the Project
 
-### Support the Project
+If WinWallpaper makes your desktop better, consider supporting its development!
 
-If you find this project useful and would like to support its development, donations are greatly appreciated.
-
-**BTC**: `19CdK5s3ALPcxjNxGiqM7pDZJ2AvY1SPcw` <br>
-**SOL**: `9q1pTozYZRHEuYn5eMBcNGj5BvHXCRPCyzhwVhNqazN1` <br>
-**ETH** (BASE): `0xDE23577a8f54E5e8EEF5eaf85438709a8178e897` <br>
+- **BTC**: `19CdK5s3ALPcxjNxGiqM7pDZJ2AvY1SPcw`
+- **SOL**: `9q1pTozYZRHEuYn5eMBcNGj5BvHXCRPCyzhwVhNqazN1`
+- **ETH** (BASE): `0xDE23577a8f54E5e8EEF5eaf85438709a8178e897`
