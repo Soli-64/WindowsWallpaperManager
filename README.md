@@ -15,6 +15,20 @@ A powerful, native Windows wallpaper manager built with **Tauri v2** and **React
 - **Global Shortcuts**: Toggle the management interface instantly (Default: `Alt + W`, fully configurable).
 - **Performance First**: Built with **Rust** and **React** for minimal resource usage and maximum responsiveness.
 
+## 🎮 Operational Modes
+
+WinWallpaper operates in two distinct modes to give you both consistency and flexibility:
+
+- **Setup Mode (Presets)**:
+  - Select from a list of predefined "Setups" that apply specific wallpapers and widgets across all your monitors simultaneously.
+  - Ideal for quickly switching between "Work," "Gaming," or "Minimal" desktop environments.
+  - Setups are static—changing your settings while in this mode won't overwrite the preset unless you explicitly save it.
+
+- **Custom Mode (Manual)**:
+  - Allows you to manually change the wallpaper and toggle widgets for each monitor individually.
+  - This mode uses a dedicated "Custom" configuration, acting as a sandbox for your manual adjustments.
+  - When you switch from a Setup to Custom mode, your current setup is copied over as a starting point, allowing you to tweak it without affecting the original preset.
+
 ## 🚀 Getting Started
 
 ### Prerequisites

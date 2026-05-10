@@ -39,7 +39,7 @@ function App() {
   const [wallpaperPath, setWallpaperPath] = useState<string | null>(null);
   const [widgets, setWidgets] = useState<Widget[]>([]);
   const [activeWidgets, setActiveWidgets] = useState<string[]>([]);
-  const [monitorIndex, setMonitorIndex] = useState<number>(1);
+  const [_, setMonitorIndex] = useState<number>(1);
 
   const isVideo = (path: string) => {
     const ext = path.split('.').pop()?.toLowerCase();
