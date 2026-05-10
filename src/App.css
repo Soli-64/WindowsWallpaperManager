@@ -6,12 +6,19 @@ html, body {
   background-color: transparent;
 }
 
+:root {
+  user-select: none;
+  -webkit-user-select: none;
+}
+
 .container {
   width: 100vw;
   height: 100vh;
-  display: flex;
+  margin: 0;
+  padding: 0;
   overflow: hidden;
   background-color: transparent;
+  position: relative;
 }
 
 .wallpaper-media {
@@ -21,7 +28,7 @@ html, body {
   width: 100vw;
   height: 100vh;
   object-fit: cover;
-  z-index: -1;
+  z-index: 1;
 }
 
 .widgets-layer {

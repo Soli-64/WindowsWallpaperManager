@@ -116,6 +116,7 @@ function App() {
             src={convertFileSrc(wallpaperPath)}
             alt="Wallpaper"
             className="wallpaper-media"
+            draggable={false}
           />
         )
       )}

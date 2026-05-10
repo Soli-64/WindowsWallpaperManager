@@ -12,16 +12,6 @@
       }
     },
     {
-      "identifier": "allow-set-wallpaper-config",
-      "description": "Allow saving wallpaper config",
-      "commands": {
-        "allow": [
-          "set_wallpaper_config"
-        ],
-        "deny": []
-      }
-    },
-    {
       "identifier": "allow-get-default-wallpaper",
       "description": "Allow getting default wallpaper",
       "commands": {
@@ -117,6 +107,36 @@
       "commands": {
         "allow": [
           "refresh_app"
+        ],
+        "deny": []
+      }
+    },
+    {
+      "identifier": "allow-get-custom-mode",
+      "description": "Allow getting custom mode",
+      "commands": {
+        "allow": [
+          "get_custom_mode"
+        ],
+        "deny": []
+      }
+    },
+    {
+      "identifier": "allow-set-custom-mode",
+      "description": "Allow setting custom mode",
+      "commands": {
+        "allow": [
+          "set_custom_mode"
+        ],
+        "deny": []
+      }
+    },
+    {
+      "identifier": "allow-get-setups",
+      "description": "Allow getting setups",
+      "commands": {
+        "allow": [
+          "get_setups"
         ],
         "deny": []
       }

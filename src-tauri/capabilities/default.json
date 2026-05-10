@@ -9,7 +9,6 @@
     "core:event:default",
     "wallpaper:default",
     "allow-get-wallpapers",
-    "allow-set-wallpaper-config",
     "allow-get-default-wallpaper",
     "allow-get-widgets",
     "allow-get-monitors",
@@ -20,6 +19,9 @@
     "allow-get-active-setup",
     "allow-set-active-setup",
     "allow-refresh-app",
+    "allow-get-custom-mode",
+    "allow-set-custom-mode",
+    "allow-get-setups",
     "global-shortcut:default"
   ]
 }

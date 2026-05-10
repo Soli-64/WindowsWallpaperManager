@@ -1,6 +1,6 @@
 use crate::storage::{
     ensure_storage_initialized, get_active_setup as storage_get_active_setup, get_monitor_config,
-    list_files_recursive, load_config, save_config,
+    list_files_recursive,
     set_active_setup as storage_set_active_setup,
     set_monitor_wallpaper as storage_set_monitor_wallpaper,
     set_monitor_widgets as storage_set_monitor_widgets, wallpapers_dir, widgets_config_path,
@@ -9,22 +9,11 @@ use crate::storage::{
 use crate::thumbnail::ThumbnailManager;
 use tauri::Emitter;
 
-#[tauri::command]
-pub fn set_wallpaper_config(path: String) {
-    save_config(path);
-}
-
 //
 // Get default wallpaper (from config or fallback)
 //
 #[tauri::command]
 pub fn get_default_wallpaper() -> String {
-    if let Some(path) = load_config() {
-        if std::path::Path::new(&path).exists() {
-            return path;
-        }
-    }
-
     let w_dir = wallpapers_dir();
     let files = list_files_recursive(w_dir, 1, Some(&["jpg", "jpeg", "png", "mp4", "webm"]));
     if let Some(first) = files.first() {
@@ -178,10 +167,6 @@ pub fn get_monitor_wallpaper(monitor_index: u32) -> String {
         return path;
     }
 
-    if let Some(default) = load_config() {
-        return default;
-    }
-
     let w_dir = wallpapers_dir();
     let files = list_files_recursive(w_dir, 1, Some(&["jpg", "jpeg", "png", "mp4", "webm"]));
     files
@@ -216,12 +201,38 @@ pub fn set_active_setup(name: String) {
     storage_set_active_setup(name);
 }
 
+#[tauri::command]
+pub fn get_custom_mode() -> bool {
+    crate::storage::get_custom_mode()
+}
+
+#[tauri::command]
+pub fn set_custom_mode(enabled: bool) {
+    crate::storage::set_custom_mode(enabled);
+}
+
+#[tauri::command]
+pub fn get_setups() -> Vec<Setup> {
+    crate::storage::get_setups()
+}
+
 pub fn refresh_config<R: tauri::Runtime>(app: &tauri::AppHandle<R>) {
-    let current = get_default_wallpaper();
-    if !current.is_empty() {
-        let _ = app.emit("update-wallpaper", current);
-    }
+    // Notify about widgets update
     let _ = app.emit("update-widgets", ());
+
+    // Get active setup
+    if let Some(setup) = crate::storage::get_active_setup() {
+        for monitor_config in setup.monitors {
+            let event_name = format!("update-monitor-{}", monitor_config.monitor_index);
+            let _ = app.emit(&event_name, monitor_config.wallpaper_path);
+        }
+    } else {
+        // Fallback to default wallpaper if no setup
+        let current = get_default_wallpaper();
+        if !current.is_empty() {
+            let _ = app.emit("update-monitor-1", current);
+        }
+    }
 }
 
 #[tauri::command]

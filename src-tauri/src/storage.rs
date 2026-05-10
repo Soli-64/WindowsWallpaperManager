@@ -21,24 +21,41 @@ pub struct Setup {
     pub monitors: Vec<MonitorConfig>,
 }
 
+impl Default for Setup {
+    fn default() -> Self {
+        Setup {
+            name: "Default".to_string(),
+            monitors: vec![],
+        }
+    }
+}
+
 #[derive(Debug, Serialize, Deserialize)]
 pub struct AppConfig {
-    pub last_wallpaper: Option<String>,
     pub shortcut: String,
     pub active_setup_name: String,
+    #[serde(default)]
     pub setups: Vec<Setup>,
+    #[serde(default)]
+    pub custom_mode: bool,
+    #[serde(default)]
+    pub custom_setup: Setup,
 }
 
 impl Default for AppConfig {
     fn default() -> Self {
         AppConfig {
-            last_wallpaper: None,
             shortcut: "alt+w".to_string(),
             active_setup_name: "Default".to_string(),
             setups: vec![Setup {
                 name: "Default".to_string(),
                 monitors: vec![],
             }],
+            custom_mode: true,
+            custom_setup: Setup {
+                name: "Custom".to_string(),
+                monitors: vec![],
+            },
         }
     }
 }
@@ -93,23 +110,23 @@ pub fn ensure_storage_initialized() {
 fn ensure_config_initialized() {
     let config_path = config_file_path();
     if !config_path.exists() {
-        if let Some(last_wallpaper) = load_legacy_wallpaper() {
-            let config = AppConfig {
-                last_wallpaper: Some(last_wallpaper),
-                shortcut: get_legacy_shortcut(),
-                active_setup_name: "Default".to_string(),
-                setups: vec![Setup {
-                    name: "Default".to_string(),
-                    monitors: vec![],
-                }],
-            };
-            save_app_config(config);
-        } else {
-            let config = AppConfig::default();
-            save_app_config(config);
-        }
+        let config = AppConfig {
+            shortcut: get_legacy_shortcut(),
+            active_setup_name: "Default".to_string(),
+            setups: vec![Setup {
+                name: "Default".to_string(),
+                monitors: vec![],
+            }],
+            custom_mode: true,
+            custom_setup: Setup {
+                name: "Custom".to_string(),
+                monitors: vec![],
+            },
+        };
+        save_app_config(config);
     }
 }
+
 
 fn ensure_widgets_config_initialized() {
     let widgets_path = widgets_config_path();
@@ -121,21 +138,6 @@ fn ensure_widgets_config_initialized() {
             let _ = std::fs::write(widgets_path, json_str);
         }
     }
-}
-
-fn load_legacy_wallpaper() -> Option<String> {
-    let config_path = config_file_path();
-    if config_path.exists() {
-        if let Ok(content) = std::fs::read_to_string(&config_path) {
-            if let Ok(val) = serde_json::from_str::<Value>(&content) {
-                return val
-                    .get("last_wallpaper")
-                    .and_then(|v| v.as_str())
-                    .map(|s| s.to_string());
-            }
-        }
-    }
-    None
 }
 
 fn get_legacy_shortcut() -> String {
@@ -215,44 +217,47 @@ pub fn get_config_value(key: &str) -> Option<Value> {
     config.get(key).cloned()
 }
 
-// Backward compatibility - save to both legacy and new structure
-pub fn save_config(path: String) {
-    let mut config = load_app_config();
-    config.last_wallpaper = Some(path.clone());
-
-    if let Some(setup) = config
-        .setups
-        .iter_mut()
-        .find(|s| s.name == config.active_setup_name)
-    {
-        if let Some(monitor) = setup.monitors.iter_mut().find(|m| m.monitor_index == 1) {
-            monitor.wallpaper_path = path;
-        }
-    }
-
-    save_app_config(config);
-}
-
-pub fn load_config() -> Option<String> {
-    load_app_config().last_wallpaper
-}
-
 pub fn get_shortcut() -> String {
     load_app_config().shortcut
 }
 
 pub fn get_active_setup() -> Option<Setup> {
     let config = load_app_config();
-    config
-        .setups
-        .into_iter()
-        .find(|s| s.name == config.active_setup_name)
+    if config.custom_mode {
+        Some(config.custom_setup)
+    } else {
+        config
+            .setups
+            .into_iter()
+            .find(|s| s.name == config.active_setup_name)
+    }
 }
 
 pub fn set_active_setup(name: String) {
     let mut config = load_app_config();
-    config.active_setup_name = name;
+    config.active_setup_name = name.clone();
+    config.custom_mode = false;
+
+    // Copy the selected setup to custom_setup as well, so switching to custom starts from here
+    if let Some(selected) = config.setups.iter().find(|s| s.name == name) {
+        config.custom_setup.monitors = selected.monitors.clone();
+    }
+
     save_app_config(config);
+}
+
+pub fn get_custom_mode() -> bool {
+    load_app_config().custom_mode
+}
+
+pub fn set_custom_mode(enabled: bool) {
+    let mut config = load_app_config();
+    config.custom_mode = enabled;
+    save_app_config(config);
+}
+
+pub fn get_setups() -> Vec<Setup> {
+    load_app_config().setups
 }
 
 pub fn get_monitor_config(monitor_index: u32) -> MonitorConfig {
@@ -275,50 +280,47 @@ pub fn get_monitor_config(monitor_index: u32) -> MonitorConfig {
 
 pub fn set_monitor_wallpaper(monitor_index: u32, path: String) {
     let mut config = load_app_config();
-    if let Some(setup) = config
-        .setups
+    
+    // We always edit the custom_setup
+    let setup = &mut config.custom_setup;
+    
+    if let Some(monitor) = setup
+        .monitors
         .iter_mut()
-        .find(|s| s.name == config.active_setup_name)
+        .find(|m| m.monitor_index == monitor_index)
     {
-        if let Some(monitor) = setup
-            .monitors
-            .iter_mut()
-            .find(|m| m.monitor_index == monitor_index)
-        {
-            monitor.wallpaper_path = path.clone();
-        } else {
-            setup.monitors.push(MonitorConfig {
-                monitor_index,
-                wallpaper_path: path.clone(),
-                active_widgets: vec![],
-            });
-        }
+        monitor.wallpaper_path = path.clone();
+    } else {
+        setup.monitors.push(MonitorConfig {
+            monitor_index,
+            wallpaper_path: path.clone(),
+            active_widgets: vec![],
+        });
     }
-    config.last_wallpaper = Some(path);
+
     save_app_config(config);
 }
 
 pub fn set_monitor_widgets(monitor_index: u32, widgets: Vec<String>) {
     let mut config = load_app_config();
-    if let Some(setup) = config
-        .setups
+    
+    // We always edit the custom_setup
+    let setup = &mut config.custom_setup;
+
+    if let Some(monitor) = setup
+        .monitors
         .iter_mut()
-        .find(|s| s.name == config.active_setup_name)
+        .find(|m| m.monitor_index == monitor_index)
     {
-        if let Some(monitor) = setup
-            .monitors
-            .iter_mut()
-            .find(|m| m.monitor_index == monitor_index)
-        {
-            monitor.active_widgets = widgets;
-        } else {
-            setup.monitors.push(MonitorConfig {
-                monitor_index,
-                wallpaper_path: String::new(),
-                active_widgets: widgets,
-            });
-        }
+        monitor.active_widgets = widgets;
+    } else {
+        setup.monitors.push(MonitorConfig {
+            monitor_index,
+            wallpaper_path: String::new(),
+            active_widgets: widgets,
+        });
     }
+    
     save_app_config(config);
 }
 

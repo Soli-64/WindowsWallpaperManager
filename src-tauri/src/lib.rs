@@ -62,7 +62,6 @@ pub fn run() {
         })
         .invoke_handler(tauri::generate_handler![
             commands::get_wallpapers,
-            commands::set_wallpaper_config,
             commands::get_default_wallpaper,
             commands::get_widgets,
             commands::refresh_app,
@@ -72,7 +71,10 @@ pub fn run() {
             commands::get_monitor_widgets,
             commands::set_monitor_widgets,
             commands::get_active_setup,
-            commands::set_active_setup
+            commands::set_active_setup,
+            commands::get_custom_mode,
+            commands::set_custom_mode,
+            commands::get_setups
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
