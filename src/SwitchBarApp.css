@@ -11,6 +11,7 @@
   align-items: center;
   justify-content: flex-start;
   overflow: hidden;
+  padding: 0 44px; /* Reduced space for smaller sidebars */
 }
 
 .scroll-area {
@@ -74,17 +75,59 @@
 
 .switch-bar-header {
   position: absolute;
-  top: 12px;
-  left: 12px;
-  right: 12px;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px; /* Add some padding from edges */
+  pointer-events: none;
+  z-index: 100;
+}
+
+.header-column {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 6px;
+  background-color: rgba(25, 25, 25, 0.8);
+  backdrop-filter: blur(20px);
+  pointer-events: auto;
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.monitors-column {
+  /* Specific styles if needed */
+}
+
+.toggles-column {
+  gap: 8px;
+}
+
+.column-header-icon {
+  width: 32px;
+  height: 32px;
   display: flex;
   align-items: center;
-  gap: 12px;
-  z-index: 100;
+  justify-content: center;
+  color: rgba(255, 255, 255, 0.4);
+  margin-bottom: 6px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.monitor-num-only {
+  font-size: 14px;
+  font-weight: 600;
+  color: inherit;
 }
 
 .main-mode-toggle, .mode-toggle {
   display: flex;
+  flex-direction: column;
   background-color: rgba(30, 30, 30, 0.9);
   border-radius: 4px;
   overflow: hidden;
@@ -95,10 +138,15 @@
   background: transparent;
   color: rgba(255, 255, 255, 0.6);
   border: none;
-  padding: 8px 16px;
+  padding: 0;
   font-size: 14px;
   cursor: pointer;
   transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
 }
 
 .mode-btn:hover {
@@ -111,22 +159,7 @@
   color: white;
 }
 
-.monitor-select {
-  background-color: rgba(40, 40, 40, 0.9);
-  color: white;
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 4px;
-  padding: 8px 12px;
-  font-size: 14px;
-  cursor: pointer;
-}
-
-.divider {
-  width: 1px;
-  height: 24px;
-  background-color: rgba(255, 255, 255, 0.1);
-  margin: 0 4px;
-}
+/* Divider removed as we use columns now */
 
 .setups-grid {
   width: 100%;

@@ -1,4 +1,5 @@
 import React from "react";
+import { Image, LayoutGrid, Library, Sliders, Monitor } from "lucide-react";
 
 interface MonitorInfo {
   index: number;
@@ -26,49 +27,59 @@ export const SwitchBarHeader: React.FC<SwitchBarHeaderProps> = ({
 }) => {
   return (
     <div className="switch-bar-header">
-      <div className="main-mode-toggle">
-        <button 
-          className={`mode-btn ${!isCustomMode ? "active" : ""}`}
-          onClick={() => onToggleCustomMode(false)}
-        >
-          Setups
-        </button>
-        <button 
-          className={`mode-btn ${isCustomMode ? "active" : ""}`}
-          onClick={() => onToggleCustomMode(true)}
-        >
-          Custom
-        </button>
+      <div className="header-column monitors-column">
+        <div className="column-header-icon">
+          <Monitor size={16} />
+        </div>
+        {monitors.map((m) => (
+          <button
+            key={m.index}
+            className={`mode-btn ${selectedMonitor === m.index ? "active" : ""}`}
+            onClick={() => onMonitorChange(m.index)}
+            title={`Monitor ${m.name.charAt(m.name.length - 1)}`}
+          >
+            <span className="monitor-num-only">{m.name.charAt(m.name.length - 1)}</span>
+          </button>
+        ))}
       </div>
 
-      {isCustomMode && (
-        <>
-          <div className="divider" />
-          <select 
-            value={selectedMonitor} 
-            onChange={(e) => onMonitorChange(parseInt(e.target.value, 10))}
-            className="monitor-select"
+      <div className="header-column toggles-column">
+        <div className="main-mode-toggle">
+          <button 
+            className={`mode-btn ${!isCustomMode ? "active" : ""}`}
+            onClick={() => onToggleCustomMode(false)}
+            title="Setups"
           >
-            {monitors.map((m) => (
-              <option key={m.index} value={m.index}>{m.name}</option>
-            ))}
-          </select>
+            <Library size={16} />
+          </button>
+          <button 
+            className={`mode-btn ${isCustomMode ? "active" : ""}`}
+            onClick={() => onToggleCustomMode(true)}
+            title="Custom"
+          >
+            <Sliders size={16} />
+          </button>
+        </div>
+
+        {isCustomMode && (
           <div className="mode-toggle">
             <button 
               className={`mode-btn ${mode === "wallpaper" ? "active" : ""}`}
               onClick={() => onModeChange("wallpaper")}
+              title="Wallpaper"
             >
-              Wallpaper
+              <Image size={16} />
             </button>
             <button 
               className={`mode-btn ${mode === "widgets" ? "active" : ""}`}
               onClick={() => onModeChange("widgets")}
+              title="Widgets"
             >
-              Widgets
+              <LayoutGrid size={16} />
             </button>
           </div>
-        </>
-      )}
+        )}
+      </div>
     </div>
   );
 };
