@@ -10,7 +10,13 @@ import {
   Cpu,
   Layers,
   ArrowRight,
-  Atom
+  Atom,
+  Code,
+  Settings2,
+  RefreshCw,
+  Layout,
+  MousePointer2,
+  Library
 } from 'lucide-react';
 
 const GitHub = ({ className }: { className?: string }) => (
@@ -45,11 +51,19 @@ const App: React.FC = () => {
           </div>
           <div className="hidden md:flex items-center gap-8 text-sm font-medium">
             <a href="#features" className="hover:text-primary-400 transition-colors">Features</a>
+            <a href="#modes" className="hover:text-primary-400 transition-colors">Modes</a>
+            <a href="#widgets" className="hover:text-primary-400 transition-colors">Widgets</a>
             <a href="#showcase" className="hover:text-primary-400 transition-colors">Showcase</a>
-            <a href="https://github.com/Soli-64/WinWallpaper" target="_blank" rel="noreferrer" className="flex items-center gap-2 bg-white/5 hover:bg-white/10 px-4 py-2 rounded-full border border-white/10 transition-all">
-              <GitHub className="w-4 h-4" />
-              <span>GitHub</span>
-            </a>
+            <div className="flex items-center gap-3">
+              <a href="https://github.com/Soli-64/WinWallpaper/releases" className="flex items-center gap-2 bg-primary-600 hover:bg-primary-500 text-white px-4 py-2 rounded-full font-bold transition-all transform hover:scale-105 shadow-lg shadow-primary-900/20 text-sm">
+                <Download className="w-4 h-4" />
+                <span>Download</span>
+              </a>
+              <a href="https://github.com/Soli-64/WinWallpaper" target="_blank" rel="noreferrer" className="flex items-center gap-2 bg-white/5 hover:bg-white/10 px-4 py-2 rounded-full border border-white/10 transition-all text-sm font-medium">
+                <GitHub className="w-4 h-4" />
+                <span>GitHub</span>
+              </a>
+            </div>
           </div>
         </div>
       </nav>
@@ -60,21 +74,25 @@ const App: React.FC = () => {
           <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full h-[600px] bg-primary-500/10 blur-[120px] rounded-full opacity-30 pointer-events-none"></div>
           <div className="max-w-7xl mx-auto grid lg:grid-cols-2 gap-12 items-center">
             <div className="z-10 text-center lg:text-left">
+              <div className="inline-flex items-center gap-2 bg-primary-500/10 border border-primary-500/20 px-3 py-1 rounded-full text-xs font-bold text-primary-400 mb-6 uppercase tracking-wider">
+                <Zap className="w-3 h-3" />
+                Powered by Tauri v2
+              </div>
               <h1 className="text-5xl lg:text-7xl font-extrabold mb-6 leading-tight animate-slide-up">
-                Switch Wallpapers <br />
-                <span className="text-gradient">In a Click</span>
+                Your Desktop, <br />
+                <span className="text-gradient">Redefined.</span>
               </h1>
               <p className="text-lg text-slate-400 mb-8 max-w-xl animate-slide-up" style={{ animationDelay: '0.1s' }}>
-                A native Windows wallpaper manager built with Tauri and React. 
-                Experience seamless multi-monitor support for images and video wallpapers with minimal performance overhead.
+                WinWallpaper is a powerful, native Windows wallpaper manager. 
+                Experience seamless multi-monitor video backgrounds, live HTML widgets, and instant mode switching with zero compromise on performance.
               </p>
               <div className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start animate-slide-up" style={{ animationDelay: '0.2s' }}>
                 <a href="https://github.com/Soli-64/WinWallpaper/releases" className="flex items-center justify-center gap-2 bg-primary-600 hover:bg-primary-500 text-white px-8 py-4 rounded-xl font-bold transition-all transform hover:scale-105 shadow-lg shadow-primary-900/20">
                   <Download className="w-5 h-5" />
                   Download Now
                 </a>
-                <a href="#showcase" className="flex items-center justify-center gap-2 bg-white/5 hover:bg-white/10 text-white px-8 py-4 rounded-xl font-bold border border-white/10 transition-all">
-                  Watch Demo
+                <a href="#features" className="flex items-center justify-center gap-2 bg-white/5 hover:bg-white/10 text-white px-8 py-4 rounded-xl font-bold border border-white/10 transition-all">
+                  Explore Features
                   <ArrowRight className="w-5 h-5" />
                 </a>
               </div>
@@ -82,11 +100,11 @@ const App: React.FC = () => {
             
             <div className="relative z-10 animate-fade-in" style={{ animationDelay: '0.3s' }}>
               <div className="relative glass p-2 rounded-2xl overflow-hidden shadow-2xl">
-                {/* <img 
-                  src="/assets/hero.png" 
+                <img 
+                  src="https://raw.githubusercontent.com/Soli-64/WinWallpaper/main/docs/media/screenshot_1.png" 
                   alt="WinWallpaper Demo" 
                   className="rounded-xl w-full object-cover aspect-video animate-float"
-                /> */}
+                />
                 <div className="absolute inset-0 bg-gradient-to-t from-slate-950/40 to-transparent pointer-events-none"></div>
               </div>
               {/* Decorative elements */}
@@ -100,58 +118,138 @@ const App: React.FC = () => {
         <section id="features" className="py-24 px-6 relative bg-slate-900/50">
           <div className="max-w-7xl mx-auto">
             <div className="text-center mb-16">
-              <h2 className="text-3xl lg:text-5xl font-bold mb-4">Powerful Features</h2>
-              <p className="text-slate-400">Everything you need for a stunning desktop experience.</p>
+              <h2 className="text-3xl lg:text-5xl font-bold mb-4">Unmatched Performance</h2>
+              <p className="text-slate-400">Built with Rust and React for a lightweight yet powerful experience.</p>
             </div>
             
             <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
               <FeatureCard 
                 icon={Monitor}
-                title="Multi-Monitor Support"
-                description="Automatically detects active monitors and displays selected wallpaper."
+                title="Multi-Monitor Mastery"
+                description="Independent background layers for every display, automatically detected and synchronized."
               />
               <FeatureCard 
                 icon={Video}
-                title="Video Wallpapers"
-                description="Enjoy smooth video playback (MP4, WebM) as your background."
+                title="Dynamic Media"
+                description="High-performance support for 4K video (MP4, WebM) and high-res images."
+              />
+              <FeatureCard 
+                icon={Code}
+                title="HTML Widgets"
+                description="Overlay clocks, weather, or system monitors using standard web technologies."
+              />
+              <FeatureCard 
+                icon={Settings2}
+                title="Dual-Mode System"
+                description="Switch between global Setups and per-monitor Custom adjustments instantly."
+              />
+              <FeatureCard 
+                icon={Layout}
+                title="System Tray"
+                description="Quick access to setups and controls right from your Windows taskbar."
               />
               <FeatureCard 
                 icon={Keyboard}
                 title="Global Shortcuts"
-                description="Instantly toggle the selection interface with Alt + W without leaving your current workspace."
-              />
-              <FeatureCard 
-                icon={Zap}
-                title="Tauri v2 Performance"
-                description="Built on Rust for fast execution and minimal system resources footprint."
-              />
-              <FeatureCard 
-                icon={Layers}
-                title="Thumbnail Cache"
-                description="Automatically generates thumbnails for your entire media library using FFmpeg."
-              />
-              <FeatureCard 
-                icon={ImageIcon}
-                title="Session Persistence"
-                description="Your session stays exactly how you left it. Wallpapers are automatically reloaded on startup."
+                description="Fully configurable shortcuts to toggle your workspace without losing focus."
               />
             </div>
           </div>
         </section>
 
+        {/* Modes Section */}
+        <section id="modes" className="py-24 px-6 overflow-hidden">
+          <div className="max-w-7xl mx-auto">
+            <div className="grid lg:grid-cols-2 gap-16 items-center">
+              <div className="order-2 lg:order-1">
+                <div className="glass p-6 rounded-3xl border border-white/5 shadow-2xl relative">
+                  <div className="absolute -top-4 -left-4 bg-primary-600 px-4 py-2 rounded-lg text-sm font-bold shadow-xl">Preset Power</div>
+                  <div className="space-y-6">
+                    <div className="flex gap-4">
+                      <div className="w-10 h-10 bg-primary-500/20 rounded-full flex items-center justify-center shrink-0">
+                        <Library className="w-5 h-5 text-primary-400" />
+                      </div>
+                      <div>
+                        <h4 className="font-bold text-white mb-1">Setup Mode</h4>
+                        <p className="text-sm text-slate-400">One-click environments. Apply a unified look across all monitors for work, gaming, or relaxation.</p>
+                      </div>
+                    </div>
+                    <div className="flex gap-4">
+                      <div className="w-10 h-10 bg-indigo-500/20 rounded-full flex items-center justify-center shrink-0">
+                        <MousePointer2 className="w-5 h-5 text-indigo-400" />
+                      </div>
+                      <div>
+                        <h4 className="font-bold text-white mb-1">Custom Mode</h4>
+                        <p className="text-sm text-slate-400">Complete freedom. Fine-tune wallpapers and widgets for each monitor individually.</p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div className="order-1 lg:order-2">
+                <h2 className="text-4xl lg:text-5xl font-bold mb-6">A Mode for Every <span className="text-gradient">Moment</span></h2>
+                <p className="text-lg text-slate-400 mb-8">
+                  Whether you want a consistent theme across three monitors or a specific widget on just one, WinWallpaper adapts to your needs.
+                </p>
+                <div className="space-y-4">
+                  {[
+                    "Static presets that won't change unless you want them to",
+                    "Sandbox adjustments in Custom mode",
+                    "Seamless transition between modes"
+                  ].map((item, i) => (
+                    <div key={i} className="flex items-center gap-3 text-slate-300">
+                      <CheckCircle2 className="w-5 h-5 text-primary-400 shrink-0" />
+                      <span>{item}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* Widgets Section */}
+        <section id="widgets" className="py-24 px-6 bg-slate-900/50">
+          <div className="max-w-7xl mx-auto">
+            <div className="text-center mb-16">
+              <h2 className="text-4xl lg:text-5xl font-bold mb-4">The Web is Your <span className="text-gradient">Widget</span></h2>
+              <p className="text-slate-400 max-w-2xl mx-auto">
+                Build your own widgets using HTML, CSS, and JS. With <strong>Live Reloading</strong>, your changes appear instantly on your desktop as you code.
+              </p>
+            </div>
+            
+            <div className="grid lg:grid-cols-3 gap-8">
+              <div className="glass p-8 rounded-3xl border border-white/5 hover:border-primary-500/30 transition-all">
+                <RefreshCw className="w-10 h-10 text-primary-400 mb-6" />
+                <h3 className="text-xl font-bold mb-3">Live Reloading</h3>
+                <p className="text-slate-400 text-sm">No more restarting. Edit your widget code and watch your desktop update in real-time.</p>
+              </div>
+              <div className="glass p-8 rounded-3xl border border-white/5 hover:border-primary-500/30 transition-all">
+                <ImageIcon className="w-10 h-10 text-indigo-400 mb-6" />
+                <h3 className="text-xl font-bold mb-3">Any Framework</h3>
+                <p className="text-slate-400 text-sm">Use React, Vue, or just vanilla JS. If a browser can render it, WinWallpaper can display it.</p>
+              </div>
+              <div className="glass p-8 rounded-3xl border border-white/5 hover:border-primary-500/30 transition-all">
+                <Cpu className="w-10 h-10 text-emerald-400 mb-6" />
+                <h3 className="text-xl font-bold mb-3">Low Overhead</h3>
+                <p className="text-slate-400 text-sm">Optimized webview rendering ensures your widgets don't eat your FPS while gaming.</p>
+              </div>
+            </div>
+          </div>
+        </section>
+
         {/* Showcase Section */}
-        <section id="showcase" className="py-24 px-6">
+        <section id="showcase" className="py-24 px-6 border-t border-white/5">
           <div className="max-w-7xl mx-auto">
             <div className="grid lg:grid-cols-2 gap-16 items-center">
               <div>
                 <h2 className="text-3xl lg:text-4xl font-bold mb-6">Seamless Desktop Integration</h2>
-                <ul className="space-y-4 pl-10">
+                <ul className="space-y-4">
                   {[
-                    // "",
-                    "Native Windows integration",
-                    "Supports high-resolution 4K media",
-                    "Minimal CPU & RAM usage",
-                    "Automatic file discovery"
+                    "Native Windows integration via Tauri v2",
+                    "Supports high-resolution 4K media with low overhead",
+                    "Minimal CPU & RAM usage even with video wallpapers",
+                    "Automatic file discovery in your Documents folder"
                   ].map((item, i) => (
                     <li key={i} className="flex items-center gap-3 text-slate-300">
                       <CheckCircle2 className="w-5 h-5 text-primary-400" />
@@ -162,7 +260,7 @@ const App: React.FC = () => {
               </div>
               <div className="glass p-4 rounded-3xl border border-white/5 shadow-2xl">
                 <img 
-                  src="/assets/present_1.gif" 
+                  src="https://raw.githubusercontent.com/Soli-64/WinWallpaper/main/docs/media/present_1.gif" 
                   alt="Interface Demo" 
                   className="rounded-2xl w-full"
                 />
@@ -199,13 +297,16 @@ const App: React.FC = () => {
 
       {/* Footer */}
       <footer className="py-12 px-6 border-t border-white/5 glass">
-        <div className="max-w-7xl mx-auto flex flex-col md:row justify-between items-center gap-8">
-          <p className="text-slate-500 text-sm">
-            © 2026 WinWallpaper Manager. Released under the MIT License.
-          </p>
+        <div className="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center gap-8">
+          <div className="flex flex-col items-center md:items-start gap-2">
+            <span className="font-bold text-xl text-white">WinWallpaper</span>
+            <p className="text-slate-500 text-sm">
+              © 2026 WinWallpaper Manager. Released under the MIT License.
+            </p>
+          </div>
           <div className="flex gap-6">
             <a href="https://github.com/Soli-64/WinWallpaper" className="text-slate-400 hover:text-white transition-colors">
-              <GitHub className="w-5 h-5" />
+              <GitHub className="w-6 h-6" />
             </a>
           </div>
         </div>
@@ -215,3 +316,4 @@ const App: React.FC = () => {
 };
 
 export default App;
+
