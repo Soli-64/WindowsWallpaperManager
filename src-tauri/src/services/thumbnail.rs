@@ -1,4 +1,4 @@
-use crate::storage::thumb_dir;
+use super::storage::thumb_dir;
 use image::DynamicImage;
 use std::fs;
 use std::path::PathBuf;

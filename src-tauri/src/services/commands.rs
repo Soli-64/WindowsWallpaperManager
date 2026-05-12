@@ -1,4 +1,4 @@
-use crate::storage::{
+use super::storage::{
     ensure_storage_initialized, get_active_setup as storage_get_active_setup, get_monitor_config,
     list_files_recursive,
     set_active_setup as storage_set_active_setup,
@@ -6,7 +6,7 @@ use crate::storage::{
     set_monitor_widgets as storage_set_monitor_widgets, wallpapers_dir, widgets_config_path,
     widgets_dir, Setup,
 };
-use crate::thumbnail::ThumbnailManager;
+use super::thumbnail::ThumbnailManager;
 use tauri::Emitter;
 
 //
@@ -203,17 +203,17 @@ pub fn set_active_setup(name: String) {
 
 #[tauri::command]
 pub fn get_custom_mode() -> bool {
-    crate::storage::get_custom_mode()
+    crate::services::storage::get_custom_mode()
 }
 
 #[tauri::command]
 pub fn set_custom_mode(enabled: bool) {
-    crate::storage::set_custom_mode(enabled);
+    crate::services::storage::set_custom_mode(enabled);
 }
 
 #[tauri::command]
 pub fn get_setups() -> Vec<Setup> {
-    crate::storage::get_setups()
+    crate::services::storage::get_setups()
 }
 
 pub fn refresh_config<R: tauri::Runtime>(app: &tauri::AppHandle<R>) {
@@ -221,7 +221,7 @@ pub fn refresh_config<R: tauri::Runtime>(app: &tauri::AppHandle<R>) {
     let _ = app.emit("update-widgets", ());
 
     // Get active setup
-    if let Some(setup) = crate::storage::get_active_setup() {
+    if let Some(setup) = crate::services::storage::get_active_setup() {
         for monitor_config in setup.monitors {
             let event_name = format!("update-monitor-{}", monitor_config.monitor_index);
             let _ = app.emit(&event_name, monitor_config.wallpaper_path);

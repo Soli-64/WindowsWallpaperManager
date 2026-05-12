@@ -1,4 +1,4 @@
-use crate::storage::get_shortcut;
+use super::storage::get_shortcut;
 use tauri::Manager;
 use tauri_plugin_global_shortcut::{GlobalShortcutExt, Shortcut, ShortcutState};
 

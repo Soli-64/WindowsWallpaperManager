@@ -1,5 +1,5 @@
-use crate::commands::{get_monitor_wallpaper, refresh_config};
-use crate::storage::{wallpapers_dir, set_monitor_wallpaper};
+use crate::services::commands::{get_monitor_wallpaper, refresh_config};
+use crate::services::storage::{wallpapers_dir, set_monitor_wallpaper};
 use tauri::menu::{MenuBuilder, MenuItem, PredefinedMenuItem};
 use tauri::tray::{MouseButton, MouseButtonState, TrayIconBuilder, TrayIconEvent};
 use tauri::{Emitter, Manager};

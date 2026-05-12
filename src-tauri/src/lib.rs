@@ -1,12 +1,14 @@
-mod commands;
-mod shortcut;
-mod storage;
-mod thumbnail;
-mod tray;
-mod window;
+mod services;
+mod components;
+
+use services::{
+    commands,
+    shortcut,
+    storage::{ensure_storage_initialized, widgets_dir}
+};
+use components::{tray,window};
 
 use notify::{RecursiveMode, Watcher};
-use storage::{ensure_storage_initialized, widgets_dir};
 use tauri::{Emitter, Manager};
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
