@@ -1,4 +1,4 @@
-use crate::services::commands::{get_monitor_wallpaper, refresh_config};
+use crate::services::commands::{get_monitor_wallpaper, refresh_config,get_wallpapers};
 use crate::services::storage::{wallpapers_dir, set_monitor_wallpaper};
 use tauri::menu::{MenuBuilder, MenuItem, PredefinedMenuItem};
 use tauri::tray::{MouseButton, MouseButtonState, TrayIconBuilder, TrayIconEvent};
@@ -8,12 +8,9 @@ use tauri::{Emitter, Manager};
 // Cycle through wallpapers for next/previous wallpaper events
 // (only in tray menu, upcoming global shortcut for full keyboard UX)
 //
-fn cycle_wallpaper<R: tauri::Runtime>(app: &tauri::AppHandle<R>, forward: bool) {
-    cycle_wallpaper_for_monitor(app, 1, forward);
-}
 
 fn cycle_wallpaper_for_monitor<R: tauri::Runtime>(app: &tauri::AppHandle<R>, monitor_index: u32, forward: bool) {
-    let wallpapers = crate::commands::get_wallpapers();
+    let wallpapers = get_wallpapers();
     if wallpapers.is_empty() {
         return;
     }
@@ -43,11 +40,20 @@ fn cycle_wallpaper_for_monitor<R: tauri::Runtime>(app: &tauri::AppHandle<R>, mon
     set_monitor_wallpaper(monitor_index, next_wp.path.clone());
 }
 
+fn cycle_wallpaper<R: tauri::Runtime>(app: &tauri::AppHandle<R>, forward: bool) {
+    cycle_wallpaper_for_monitor(app, 1, forward);
+}
+
+
+//
+// Init tray menu
+// - [ next wp, previous wp, open wallpapers folder, quit  ]
+//
+
+
 pub fn init_tray<R: tauri::Runtime>(app: &tauri::App<R>) -> Result<(), Box<dyn std::error::Error>> {
-    //
-    // Tray menu
-    // Includes next, previous, open wallpapers folder, open settings and quit the app
-    //
+    
+    // Menu items
     let quit_i = MenuItem::with_id(app, "quit", "Quit", true, None::<&str>)?;
     let show_i = MenuItem::with_id(app, "show", "Open Wallpaper Bar", true, None::<&str>)?;
     let next_i = MenuItem::with_id(app, "next", "Next Wallpaper", true, None::<&str>)?;
@@ -81,6 +87,7 @@ pub fn init_tray<R: tauri::Runtime>(app: &tauri::App<R>) -> Result<(), Box<dyn s
         TrayIconBuilder::<R>::with_id("main")
     };
 
+    // Tray icon events
     let _tray = tray_builder
         .tooltip("WinWallpaper")
         .menu(&menu)

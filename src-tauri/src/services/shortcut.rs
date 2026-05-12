@@ -1,7 +1,13 @@
+
 use super::storage::get_shortcut;
 use tauri::Manager;
 use tauri_plugin_global_shortcut::{GlobalShortcutExt, Shortcut, ShortcutState};
 
+//
+// Setup shortcut module
+// - Instanciate tauri plugin
+// - Register global shortcut
+//
 pub fn setup_shortcut<R: tauri::Runtime>(builder: tauri::Builder<R>) -> tauri::Builder<R> {
     builder
         .plugin(
@@ -51,13 +57,20 @@ pub fn setup_shortcut<R: tauri::Runtime>(builder: tauri::Builder<R>) -> tauri::B
         )
 }
 
+//
+// Initialize shortcut module
+// - Get shortcut from config
+// - Register global shortcut
+//
 pub fn init_shortcut<R: tauri::Runtime>(app: &tauri::App<R>) -> Result<(), Box<dyn std::error::Error>> {
-    // Register Shortcut from config
+    // Get shortcut from config
     let shortcut_to_reg = get_shortcut();
 
-    // Convert stored shortcut string into the Shortcut type required by the API
+    // Convert stored shortcut string into the Shortcut type required by the Tauri API
     let shortcut_wrapper = Shortcut::try_from(shortcut_to_reg.as_str())
         .expect("Invalid shortcut format stored in config");
+    
+    // Register global shortcut
     match app.global_shortcut().register(shortcut_wrapper) {
         Ok(_) => println!("Successfully registered {} shortcut", shortcut_to_reg),
         Err(e) => println!("Failed to register {} shortcut: {}", shortcut_to_reg, e),
@@ -65,7 +78,3 @@ pub fn init_shortcut<R: tauri::Runtime>(app: &tauri::App<R>) -> Result<(), Box<d
 
     Ok(())
 }
-
-
-
-

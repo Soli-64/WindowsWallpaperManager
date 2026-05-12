@@ -11,8 +11,17 @@ use components::{tray,window};
 use notify::{RecursiveMode, Watcher};
 use tauri::{Emitter, Manager};
 
+//
+// Run the application
+// - Init Tauri and modules
+// - Setup event handlers
+// - Setup watcher for widgets directory
+//
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
+    //
+    // Initialize Tauri Instance
+    //
     let builder = tauri::Builder::default()
         .plugin(tauri_plugin_opener::init())
         .plugin(tauri_plugin_wallpaper::init());
@@ -22,7 +31,8 @@ pub fn run() {
 
     builder
         .setup(|app| {
-            // Storage
+            
+            // Initialize storage
             ensure_storage_initialized();
 
             // Initialize modular features

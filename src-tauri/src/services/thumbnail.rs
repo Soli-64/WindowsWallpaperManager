@@ -7,6 +7,7 @@ use std::process::Command;
 pub struct ThumbnailManager {}
 
 impl ThumbnailManager {
+    
     pub fn new() -> Self {
         Self {}
     }
@@ -26,9 +27,7 @@ impl ThumbnailManager {
         thumb_dir().join(filename)
     }
 
-    //
     // Generate thumbnail from image path (with optional max width/height)
-    //
     pub fn create_thumbnail(
         &self,
         original_path: &PathBuf,
@@ -47,19 +46,17 @@ impl ThumbnailManager {
             let img = self.extract_video_frame(original_path, max_width, max_height)?;
             img.save(&thumb_path)?;
         } else {
-            // .thumbnail() is more memory-efficient than loading + resizing manually
             let img = image::open(original_path)?;
-            let thumb = img.thumbnail(max_width, max_height);
+            let thumb = img.thumbnail(max_width, max_height); // more memory-efficient than loading + resizing manually
             thumb.save(&thumb_path)?;
         }
 
         Ok(thumb_path)
     }
 
-    //
     // Extract single frame from video using ffmpeg (scalable)
-    // Used for thumbnail generation
-    //
+    //  - used for thumbnail generation
+    //  - ( upcoming feature: video wp pause when not visible )
     fn extract_video_frame(
         &self,
         video_path: &PathBuf,

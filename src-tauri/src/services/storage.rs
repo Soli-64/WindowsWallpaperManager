@@ -5,7 +5,8 @@ use std::path::PathBuf;
 use walkdir::WalkDir;
 
 //
-// Data Structures
+// Config related data structures
+// - [ MonitorConfig, Setup, AppConfig ]
 //
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
@@ -60,9 +61,12 @@ impl Default for AppConfig {
     }
 }
 
+
 //
-// Init different storage paths and dirs
+// Init methods: create required directories and default configs
+// - [ wallpapers/, thumbnails/, widgets/, config.json, widget.json ]
 //
+
 
 pub fn wallpapers_dir() -> PathBuf {
     dirs::document_dir()
@@ -85,9 +89,27 @@ pub fn widgets_dir() -> PathBuf {
         .join("widgets")
 }
 
+pub fn config_file_path() -> PathBuf {
+    dirs::document_dir()
+        .unwrap_or_else(|| PathBuf::from("."))
+        .join("win-wallpaper")
+        .join("config.json")
+}
+
+pub fn widgets_config_path() -> PathBuf {
+    dirs::document_dir()
+        .unwrap_or_else(|| PathBuf::from("."))
+        .join("win-wallpaper")
+        .join("widgets.json")
+}
+
+
 //
-// Ensure required directories exist and create default configs
+// Ensure methods: create required directories and default configs
+// [ config.json, widget.json ]
 //
+
+
 pub fn ensure_storage_initialized() {
     let w_dir = wallpapers_dir();
     let t_dir = thumb_dir();
@@ -140,6 +162,7 @@ fn ensure_widgets_config_initialized() {
     }
 }
 
+// Backward compatibility function (disappear in v1)
 fn get_legacy_shortcut() -> String {
     let config_path = config_file_path();
     if config_path.exists() {
@@ -153,8 +176,17 @@ fn get_legacy_shortcut() -> String {
             }
         }
     }
+    // Fallback to default value
     "alt+w".to_string()
 }
+
+
+//
+// Loading/saving config
+// - Load [ app_config, full_config ]
+// - Save [ app_config, full_config ]
+//
+
 
 pub fn load_app_config() -> AppConfig {
     let config_path = config_file_path();
@@ -173,20 +205,6 @@ pub fn save_app_config(config: AppConfig) {
     }
 }
 
-pub fn config_file_path() -> PathBuf {
-    dirs::document_dir()
-        .unwrap_or_else(|| PathBuf::from("."))
-        .join("win-wallpaper")
-        .join("config.json")
-}
-
-pub fn widgets_config_path() -> PathBuf {
-    dirs::document_dir()
-        .unwrap_or_else(|| PathBuf::from("."))
-        .join("win-wallpaper")
-        .join("widgets.json")
-}
-
 fn load_full_config() -> Value {
     let config_path = config_file_path();
     if let Ok(content) = std::fs::read_to_string(config_path) {
@@ -203,6 +221,15 @@ fn save_full_config(config: &Value) {
         let _ = std::fs::write(config_path, json_str);
     }
 }
+
+
+//
+// Setters / getters
+// - GET [config_value, active_setup, custom_mode, monitor_config, monitor_wallpaper, monitor_widgets, shortcut, setups]
+// - SET [config_value, active_setup, custom_mode, monitor_config, monitor_wallpaper, monitor_widgets]
+// (setups and shortcut are static for now, will change w/ config UI)
+// 
+
 
 pub fn set_config_value(key: &str, value: Value) {
     let mut config = load_full_config();
@@ -279,9 +306,9 @@ pub fn get_monitor_config(monitor_index: u32) -> MonitorConfig {
 }
 
 pub fn set_monitor_wallpaper(monitor_index: u32, path: String) {
-    let mut config = load_app_config();
     
-    // We always edit the custom_setup
+    let mut config = load_app_config();
+    // Always edit the custom_setup
     let setup = &mut config.custom_setup;
     
     if let Some(monitor) = setup
@@ -302,9 +329,9 @@ pub fn set_monitor_wallpaper(monitor_index: u32, path: String) {
 }
 
 pub fn set_monitor_widgets(monitor_index: u32, widgets: Vec<String>) {
-    let mut config = load_app_config();
     
-    // We always edit the custom_setup
+    let mut config = load_app_config();
+    // Always edit the custom_setup
     let setup = &mut config.custom_setup;
 
     if let Some(monitor) = setup
@@ -324,9 +351,13 @@ pub fn set_monitor_widgets(monitor_index: u32, widgets: Vec<String>) {
     save_app_config(config);
 }
 
+
 //
+// Utils 
+//
+
+
 // List files recursively with depth limit and file extension filter (optional)
-//
 pub fn list_files_recursive(
     dir: PathBuf,
     depth: usize,

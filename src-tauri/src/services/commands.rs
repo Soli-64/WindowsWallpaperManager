@@ -9,19 +9,11 @@ use super::storage::{
 use super::thumbnail::ThumbnailManager;
 use tauri::Emitter;
 
-//
-// Get default wallpaper (from config or fallback)
-//
-#[tauri::command]
-pub fn get_default_wallpaper() -> String {
-    let w_dir = wallpapers_dir();
-    let files = list_files_recursive(w_dir, 1, Some(&["jpg", "jpeg", "png", "mp4", "webm"]));
-    if let Some(first) = files.first() {
-        return first.to_string_lossy().to_string();
-    }
 
-    "".to_string()
-}
+
+//
+// Config related data structures
+//
 
 #[derive(serde::Serialize)]
 pub struct WallpaperItem {
@@ -41,8 +33,22 @@ pub struct Widget {
 }
 
 //
-// Get list of widgets (from widgets.json, loads and parse html files content)
+// Tauri exposed commands
 //
+
+// Get default wallpaper (from config or fallback)
+#[tauri::command]
+pub fn get_default_wallpaper() -> String {
+    let w_dir = wallpapers_dir();
+    let files = list_files_recursive(w_dir, 1, Some(&["jpg", "jpeg", "png", "mp4", "webm"]));
+    if let Some(first) = files.first() {
+        return first.to_string_lossy().to_string();
+    }
+
+    "".to_string()
+}
+
+// Get list of widgets (from widgets.json, loads and parse html files content)
 #[tauri::command]
 pub fn get_widgets() -> Result<Vec<Widget>, String> {
     let config_path = widgets_config_path();
@@ -64,10 +70,8 @@ pub fn get_widgets() -> Result<Vec<Widget>, String> {
     Ok(widgets)
 }
 
-//
 // Get list of wallpapers (recursive w/ limited depth)
 // Checks media format, creates thumbnails if needed, and returns list of wallpapers
-//
 #[tauri::command]
 pub fn get_wallpapers() -> Vec<WallpaperItem> {
     ensure_storage_initialized();
@@ -111,9 +115,7 @@ pub fn get_wallpapers() -> Vec<WallpaperItem> {
     items
 }
 
-//
-// Per-monitor commands for setups feature
-//
+// Per-monitor data structures
 
 #[derive(serde::Serialize)]
 pub struct MonitorInfo {
@@ -125,6 +127,7 @@ pub struct MonitorInfo {
     pub y: i32,
 }
 
+// Get list of monitors
 #[tauri::command]
 pub fn get_monitors(app: tauri::AppHandle) -> Vec<MonitorInfo> {
     let monitors = app.available_monitors().unwrap_or_default();
@@ -158,6 +161,7 @@ pub fn get_monitors(app: tauri::AppHandle) -> Vec<MonitorInfo> {
         .collect()
 }
 
+// Get wallpaper for a specific monitor
 #[tauri::command]
 pub fn get_monitor_wallpaper(monitor_index: u32) -> String {
     let config = get_monitor_config(monitor_index);
@@ -174,6 +178,13 @@ pub fn get_monitor_wallpaper(monitor_index: u32) -> String {
         .map(|p| p.to_string_lossy().to_string())
         .unwrap_or_default()
 }
+
+//
+// Storage related commands
+// - GET [ monitor_wallpaper, monitor_widgets, active_setup, custom_mode, setups ]
+// - SET [ monitor_wallpaper, monitor_widgets, active_setup, custom_mode ]
+// (setup aren't set for now as they are static in config, might be implemented later with config UI)
+//
 
 #[tauri::command]
 pub fn set_monitor_wallpaper(monitor_index: u32, path: String) {
@@ -217,7 +228,6 @@ pub fn get_setups() -> Vec<Setup> {
 }
 
 pub fn refresh_config<R: tauri::Runtime>(app: &tauri::AppHandle<R>) {
-    // Notify about widgets update
     let _ = app.emit("update-widgets", ());
 
     // Get active setup
@@ -234,6 +244,10 @@ pub fn refresh_config<R: tauri::Runtime>(app: &tauri::AppHandle<R>) {
         }
     }
 }
+
+//
+// Refresh app command
+//
 
 #[tauri::command]
 pub fn refresh_app(app: tauri::AppHandle) {
