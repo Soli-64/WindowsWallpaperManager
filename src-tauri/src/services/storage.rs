@@ -61,12 +61,10 @@ impl Default for AppConfig {
     }
 }
 
-
 //
 // Init methods: create required directories and default configs
 // - [ wallpapers/, thumbnails/, widgets/, config.json, widget.json ]
 //
-
 
 pub fn wallpapers_dir() -> PathBuf {
     dirs::document_dir()
@@ -103,12 +101,10 @@ pub fn widgets_config_path() -> PathBuf {
         .join("widgets.json")
 }
 
-
 //
 // Ensure methods: create required directories and default configs
 // [ config.json, widget.json ]
 //
-
 
 pub fn ensure_storage_initialized() {
     let w_dir = wallpapers_dir();
@@ -149,7 +145,6 @@ fn ensure_config_initialized() {
     }
 }
 
-
 fn ensure_widgets_config_initialized() {
     let widgets_path = widgets_config_path();
     if !widgets_path.exists() {
@@ -180,13 +175,11 @@ fn get_legacy_shortcut() -> String {
     "alt+w".to_string()
 }
 
-
 //
 // Loading/saving config
 // - Load [ app_config, full_config ]
 // - Save [ app_config, full_config ]
 //
-
 
 pub fn load_app_config() -> AppConfig {
     let config_path = config_file_path();
@@ -222,14 +215,12 @@ fn save_full_config(config: &Value) {
     }
 }
 
-
 //
 // Setters / getters
 // - GET [config_value, active_setup, custom_mode, monitor_config, monitor_wallpaper, monitor_widgets, shortcut, setups]
 // - SET [config_value, active_setup, custom_mode, monitor_config, monitor_wallpaper, monitor_widgets]
 // (setups and shortcut are static for now, will change w/ config UI)
-// 
-
+//
 
 pub fn set_config_value(key: &str, value: Value) {
     let mut config = load_full_config();
@@ -306,11 +297,10 @@ pub fn get_monitor_config(monitor_index: u32) -> MonitorConfig {
 }
 
 pub fn set_monitor_wallpaper(monitor_index: u32, path: String) {
-    
     let mut config = load_app_config();
     // Always edit the custom_setup
     let setup = &mut config.custom_setup;
-    
+
     if let Some(monitor) = setup
         .monitors
         .iter_mut()
@@ -329,7 +319,6 @@ pub fn set_monitor_wallpaper(monitor_index: u32, path: String) {
 }
 
 pub fn set_monitor_widgets(monitor_index: u32, widgets: Vec<String>) {
-    
     let mut config = load_app_config();
     // Always edit the custom_setup
     let setup = &mut config.custom_setup;
@@ -347,15 +336,13 @@ pub fn set_monitor_widgets(monitor_index: u32, widgets: Vec<String>) {
             active_widgets: widgets,
         });
     }
-    
+
     save_app_config(config);
 }
 
-
 //
-// Utils 
+// Utils
 //
-
 
 // List files recursively with depth limit and file extension filter (optional)
 pub fn list_files_recursive(

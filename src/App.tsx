@@ -1,4 +1,4 @@
-import { useEffect, useState, useRef } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import { listen } from "@tauri-apps/api/event";
 import { invoke, convertFileSrc } from "@tauri-apps/api/core";
 import "./App.css";
@@ -35,97 +35,106 @@ function WidgetComponent({ widget }: { widget: Widget }) {
   return <div ref={containerRef} className={`widget widget-${widget.id}`} />;
 }
 
+// Only re-render when html_content changes to avoid unnecessary DOM operations
+const MemoizedWidgetComponent = React.memo(WidgetComponent, (prev, next) => {
+  return prev.widget.html_content === next.widget.html_content;
+});
+
 function App() {
   const [wallpaperPath, setWallpaperPath] = useState<string | null>(null);
   const [widgets, setWidgets] = useState<Widget[]>([]);
   const [activeWidgets, setActiveWidgets] = useState<string[]>([]);
-  const [_, setMonitorIndex] = useState<number>(1);
+  const videoRef = useRef<HTMLVideoElement>(null);
 
   const isVideo = (path: string) => {
     const ext = path.split('.').pop()?.toLowerCase();
     return ["mp4", "webm", "mov"].includes(ext || "");
   };
 
-  useEffect(() => {
-    const url = new URL(window.location.href);
-    const label = url.searchParams.get("label") || "wallpaper-0";
-    const idx = parseInt(label.replace("wallpaper-", ""), 10) + 1;
-    setMonitorIndex(idx);
+    useEffect(() => {
+     const url = new URL(window.location.href);
+     const label = url.searchParams.get("label") || "wallpaper-0";
+     const idx = parseInt(label.replace("wallpaper-", ""), 10) + 1;
 
-    invoke<string>(`get_monitor_wallpaper`, { monitorIndex: idx }).then((path) => {
-      if (path) setWallpaperPath(path);
-    });
+     invoke<string>(`get_monitor_wallpaper`, { monitorIndex: idx }).then((path) => {
+       if (path) setWallpaperPath(path);
+     });
 
-    invoke<string[]>(`get_monitor_widgets`, { monitorIndex: idx }).then((active) => {
-      setActiveWidgets(active || []);
-    });
+     invoke<string[]>(`get_monitor_widgets`, { monitorIndex: idx }).then((active) => {
+       setActiveWidgets(active || []);
+     });
 
-    invoke<Widget[]>("get_widgets")
-      .then((data) => {
-        setWidgets(data);
-      })
-      .catch((err) => console.error("Failed to load widgets:", err));
+     invoke<Widget[]>("get_widgets")
+       .then((data) => {
+         setWidgets(data);
+       })
+       .catch((err) => console.error("Failed to load widgets:", err));
 
-    const setupListener = async () => {
-      const unlistenWallpaper = await listen<string>(`update-monitor-${idx}`, (event) => {
-        console.log("New wallpaper:", event.payload);
-        setWallpaperPath(event.payload);
-      });
+     let unlistenWallpaper: (() => void) | null = null;
+     let unlistenWidgets: (() => void) | null = null;
 
-      const unlistenWidgets = await listen("update-widgets", () => {
-        console.log("Widgets updated, reloading...");
-        invoke<Widget[]>("get_widgets")
-          .then((data) => {
-            setWidgets(data);
-          })
-          .catch((err) => console.error("Failed to reload widgets:", err));
-        invoke<string[]>(`get_monitor_widgets`, { monitorIndex: idx }).then((active) => {
-          setActiveWidgets(active || []);
+     const setupListener = async () => {
+        unlistenWallpaper = await listen<string>(`update-monitor-${idx}`, (event) => {
+          console.log("New wallpaper:", event.payload);
+          setWallpaperPath(event.payload);
+          // Flush video buffer when wallpaper changes to prevent ghosting
+          if (videoRef.current) {
+            videoRef.current.load();
+          }
         });
-      });
 
-      return () => {
-        unlistenWallpaper();
-        unlistenWidgets();
-      };
-    };
+       unlistenWidgets = await listen("update-widgets", () => {
+         console.log("Widgets updated, reloading...");
+         invoke<Widget[]>("get_widgets")
+           .then((data) => {
+             setWidgets(data);
+           })
+           .catch((err) => console.error("Failed to reload widgets:", err));
+         invoke<string[]>(`get_monitor_widgets`, { monitorIndex: idx }).then((active) => {
+           setActiveWidgets(active || []);
+         });
+       });
+     };
 
-    const cleanup = setupListener();
-    return () => {
-      cleanup.then(unlisten => unlisten());
-    };
-  }, []);
+     setupListener();
+
+     return () => {
+       if (unlistenWallpaper) unlistenWallpaper();
+       if (unlistenWidgets) unlistenWidgets();
+     };
+   }, []);
 
   const filteredWidgets = widgets.filter(w => activeWidgets.includes(w.id));
 
   return (
     <main className="container">
-      {wallpaperPath && (
-        isVideo(wallpaperPath) ? (
-          <video
-            key={wallpaperPath}
-            src={convertFileSrc(wallpaperPath)}
-            autoPlay
-            loop
-            muted
-            className="wallpaper-media"
-          />
-        ) : (
-          <img
-            key={wallpaperPath}
-            src={convertFileSrc(wallpaperPath)}
-            alt="Wallpaper"
-            className="wallpaper-media"
-            draggable={false}
-          />
-        )
-      )}
+       {wallpaperPath && (
+         isVideo(wallpaperPath) ? (
+           <video
+             ref={videoRef}
+             key={wallpaperPath}
+             src={convertFileSrc(wallpaperPath)}
+             autoPlay
+             loop
+             muted
+             className="wallpaper-media"
+           />
+         ) : (
+           <img
+             key={wallpaperPath}
+             src={convertFileSrc(wallpaperPath)}
+             alt="Wallpaper"
+             className="wallpaper-media"
+             draggable={false}
+           />
+         )
+       )}
 
-      <div className="widgets-layer">
-        {filteredWidgets.map((widget) => (
-          <WidgetComponent key={widget.id} widget={widget} />
-        ))}
-      </div>
+       <div className="widgets-layer">
+         {filteredWidgets.map((widget) => (
+           <MemoizedWidgetComponent key={widget.id} widget={widget} />
+         ))}
+       </div>
     </main>
   );
 }

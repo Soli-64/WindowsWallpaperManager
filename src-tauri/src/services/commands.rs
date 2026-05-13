@@ -1,15 +1,12 @@
 use super::storage::{
     ensure_storage_initialized, get_active_setup as storage_get_active_setup, get_monitor_config,
-    list_files_recursive,
-    set_active_setup as storage_set_active_setup,
+    list_files_recursive, set_active_setup as storage_set_active_setup,
     set_monitor_wallpaper as storage_set_monitor_wallpaper,
     set_monitor_widgets as storage_set_monitor_widgets, wallpapers_dir, widgets_config_path,
     widgets_dir, Setup,
 };
 use super::thumbnail::ThumbnailManager;
 use tauri::Emitter;
-
-
 
 //
 // Config related data structures
@@ -151,7 +148,10 @@ pub fn get_monitors(app: tauri::AppHandle) -> Vec<MonitorInfo> {
             let size = m.size();
             MonitorInfo {
                 index: (i + 1) as u32,
-                name: m.name().unwrap_or(&format!("Monitor {}", i + 1)).to_string(),
+                name: m
+                    .name()
+                    .unwrap_or(&format!("Monitor {}", i + 1))
+                    .to_string(),
                 width: size.width,
                 height: size.height,
                 x: pos.x,

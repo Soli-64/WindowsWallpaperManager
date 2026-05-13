@@ -1,4 +1,3 @@
-
 use super::storage::get_shortcut;
 use tauri::Manager;
 use tauri_plugin_global_shortcut::{GlobalShortcutExt, Shortcut, ShortcutState};
@@ -9,52 +8,51 @@ use tauri_plugin_global_shortcut::{GlobalShortcutExt, Shortcut, ShortcutState};
 // - Register global shortcut
 //
 pub fn setup_shortcut<R: tauri::Runtime>(builder: tauri::Builder<R>) -> tauri::Builder<R> {
-    builder
-        .plugin(
-            tauri_plugin_global_shortcut::Builder::new()
-                .with_handler(|app, shortcut, event| {
-                    println!(
-                        "Shortcut event received: {:?} for {}",
-                        event.state(),
-                        shortcut.to_string()
-                    );
-                    if event.state() == ShortcutState::Pressed {
-                        let active_shortcut = get_shortcut();
-                        let shortcut_str = shortcut.to_string().to_lowercase();
+    builder.plugin(
+        tauri_plugin_global_shortcut::Builder::new()
+            .with_handler(|app, shortcut, event| {
+                println!(
+                    "Shortcut event received: {:?} for {}",
+                    event.state(),
+                    shortcut.to_string()
+                );
+                if event.state() == ShortcutState::Pressed {
+                    let active_shortcut = get_shortcut();
+                    let shortcut_str = shortcut.to_string().to_lowercase();
 
-                        // Match either "alt+w" or "alt+keyw" (Tauri v2 format)
-                        let matches = shortcut_str == active_shortcut
-                            || shortcut_str == active_shortcut.replace("+", "+key");
+                    // Match either "alt+w" or "alt+keyw" (Tauri v2 format)
+                    let matches = shortcut_str == active_shortcut
+                        || shortcut_str == active_shortcut.replace("+", "+key");
 
-                        if matches {
-                            println!(
-                                "Shortcut {} detected! Toggling switch-bar...",
-                                active_shortcut
-                            );
+                    if matches {
+                        println!(
+                            "Shortcut {} detected! Toggling switch-bar...",
+                            active_shortcut
+                        );
 
-                            // Toggle switch-bar visibility
-                            if let Some(window) = app.get_webview_window("switch-bar") {
-                                let is_visible = window.is_visible().unwrap_or(false);
-                                println!("Current visibility: {}", is_visible);
-                                if is_visible {
-                                    window.hide().unwrap();
-                                    window.set_ignore_cursor_events(true).unwrap();
-                                    println!("Hidden and ignoring cursor events.");
-                                } else {
-                                    window.show().unwrap();
-                                    window.set_ignore_cursor_events(false).unwrap();
-                                    window.set_focus().unwrap();
-                                    let _ = window.eval("window.focus();");
-                                    println!("Shown and accepting cursor events.");
-                                }
+                        // Toggle switch-bar visibility
+                        if let Some(window) = app.get_webview_window("switch-bar") {
+                            let is_visible = window.is_visible().unwrap_or(false);
+                            println!("Current visibility: {}", is_visible);
+                            if is_visible {
+                                window.hide().unwrap();
+                                window.set_ignore_cursor_events(true).unwrap();
+                                println!("Hidden and ignoring cursor events.");
                             } else {
-                                println!("Error: 'switch-bar' window not found!");
+                                window.show().unwrap();
+                                window.set_ignore_cursor_events(false).unwrap();
+                                window.set_focus().unwrap();
+                                let _ = window.eval("window.focus();");
+                                println!("Shown and accepting cursor events.");
                             }
+                        } else {
+                            println!("Error: 'switch-bar' window not found!");
                         }
                     }
-                })
-                .build(),
-        )
+                }
+            })
+            .build(),
+    )
 }
 
 //
@@ -62,14 +60,16 @@ pub fn setup_shortcut<R: tauri::Runtime>(builder: tauri::Builder<R>) -> tauri::B
 // - Get shortcut from config
 // - Register global shortcut
 //
-pub fn init_shortcut<R: tauri::Runtime>(app: &tauri::App<R>) -> Result<(), Box<dyn std::error::Error>> {
+pub fn init_shortcut<R: tauri::Runtime>(
+    app: &tauri::App<R>,
+) -> Result<(), Box<dyn std::error::Error>> {
     // Get shortcut from config
     let shortcut_to_reg = get_shortcut();
 
     // Convert stored shortcut string into the Shortcut type required by the Tauri API
     let shortcut_wrapper = Shortcut::try_from(shortcut_to_reg.as_str())
         .expect("Invalid shortcut format stored in config");
-    
+
     // Register global shortcut
     match app.global_shortcut().register(shortcut_wrapper) {
         Ok(_) => println!("Successfully registered {} shortcut", shortcut_to_reg),

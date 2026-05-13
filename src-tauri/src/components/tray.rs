@@ -1,5 +1,5 @@
-use crate::services::commands::{get_monitor_wallpaper, refresh_config,get_wallpapers};
-use crate::services::storage::{wallpapers_dir, set_monitor_wallpaper};
+use crate::services::commands::{get_monitor_wallpaper, get_wallpapers, refresh_config};
+use crate::services::storage::{set_monitor_wallpaper, wallpapers_dir};
 use tauri::menu::{MenuBuilder, MenuItem, PredefinedMenuItem};
 use tauri::tray::{MouseButton, MouseButtonState, TrayIconBuilder, TrayIconEvent};
 use tauri::{Emitter, Manager};
@@ -9,7 +9,11 @@ use tauri::{Emitter, Manager};
 // (only in tray menu, upcoming global shortcut for full keyboard UX)
 //
 
-fn cycle_wallpaper_for_monitor<R: tauri::Runtime>(app: &tauri::AppHandle<R>, monitor_index: u32, forward: bool) {
+fn cycle_wallpaper_for_monitor<R: tauri::Runtime>(
+    app: &tauri::AppHandle<R>,
+    monitor_index: u32,
+    forward: bool,
+) {
     let wallpapers = get_wallpapers();
     if wallpapers.is_empty() {
         return;
@@ -44,15 +48,12 @@ fn cycle_wallpaper<R: tauri::Runtime>(app: &tauri::AppHandle<R>, forward: bool) 
     cycle_wallpaper_for_monitor(app, 1, forward);
 }
 
-
 //
 // Init tray menu
 // - [ next wp, previous wp, open wallpapers folder, quit  ]
 //
 
-
 pub fn init_tray<R: tauri::Runtime>(app: &tauri::App<R>) -> Result<(), Box<dyn std::error::Error>> {
-    
     // Menu items
     let quit_i = MenuItem::with_id(app, "quit", "Quit", true, None::<&str>)?;
     let show_i = MenuItem::with_id(app, "show", "Open Wallpaper Bar", true, None::<&str>)?;
@@ -141,6 +142,3 @@ pub fn init_tray<R: tauri::Runtime>(app: &tauri::App<R>) -> Result<(), Box<dyn s
 
     Ok(())
 }
-
-
-

@@ -1,14 +1,15 @@
-mod services;
 mod components;
+mod services;
 
+use components::{tray, window};
 use services::{
-    commands,
-    shortcut,
-    storage::{ensure_storage_initialized, widgets_dir}
-};
-use components::{tray,window};
+    commands, shortcut,
+    storage::{ensure_storage_initialized, widgets_dir},
+}; 
 
 use notify::{RecursiveMode, Watcher};
+use std::sync::{Arc, Mutex};
+use std::time::Instant;
 use tauri::{Emitter, Manager};
 
 //
@@ -42,8 +43,12 @@ pub fn run() {
             let app_handle = app.handle().clone();
 
             //
-            // Widgets Watcher
+            // Widgets Watcher with debounce
             //
+            let last_update = Arc::new(Mutex::new(Instant::now()));
+            let last_update_clone = last_update.clone();
+            let app_handle_clone = app_handle.clone();
+
             let mut watcher =
                 notify::recommended_watcher(move |res: notify::Result<notify::Event>| match res {
                     Ok(event) => {
@@ -51,7 +56,13 @@ pub fn run() {
                             || event.kind.is_create()
                             || event.kind.is_remove()
                         {
-                            let _ = app_handle.emit("update-widgets", ());
+                            let mut last = last_update_clone.lock().unwrap();
+                            let now = Instant::now();
+                            if now.duration_since(*last).as_millis() >= 300 {
+                                *last = now;
+                                drop(last); // Release lock before emitting
+                                let _ = app_handle_clone.emit("update-widgets", ());
+                            }
                         }
                     }
                     Err(e) => println!("watch error: {:?}", e),
@@ -91,4 +102,3 @@ pub fn run() {
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
 }
-

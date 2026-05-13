@@ -1,7 +1,6 @@
 use tauri::{Position, Size, WebviewUrl, WebviewWindowBuilder};
 use tauri_plugin_wallpaper::{AttachRequest, WallpaperExt};
 
-
 //
 // Create windows for each monitor
 //  - build windows with webview to match every screen
@@ -9,16 +8,15 @@ use tauri_plugin_wallpaper::{AttachRequest, WallpaperExt};
 //  - attach as wallpaper
 //
 
-
-pub fn setup_monitors<R: tauri::Runtime>(app: &mut tauri::App<R>) -> Result<(), Box<dyn std::error::Error>> {
-
+pub fn setup_monitors<R: tauri::Runtime>(
+    app: &mut tauri::App<R>,
+) -> Result<(), Box<dyn std::error::Error>> {
     let monitors = app.available_monitors()?;
 
     let min_x = monitors.iter().map(|m| m.position().x).min().unwrap_or(0);
     let min_y = monitors.iter().map(|m| m.position().y).min().unwrap_or(0);
 
     for (i, monitor) in monitors.iter().enumerate() {
-        
         println!(
             "Monitor: {}",
             monitor.name().expect("Monitor name not found").as_str()
@@ -38,15 +36,19 @@ pub fn setup_monitors<R: tauri::Runtime>(app: &mut tauri::App<R>) -> Result<(), 
         );
 
         // Minimal webview config
-        let window = WebviewWindowBuilder::new(app, &label, WebviewUrl::App(format!("index.html?label={}", label).into()))
-            .title(&format!("Wallpaper Background {}", i))
-            .decorations(false)
-            .transparent(true)
-            .shadow(false)
-            .resizable(false)
-            .visible(false)
-            .fullscreen(false)
-            .build()?;
+        let window = WebviewWindowBuilder::new(
+            app,
+            &label,
+            WebviewUrl::App(format!("index.html?label={}", label).into()),
+        )
+        .title(&format!("Wallpaper Background {}", i))
+        .decorations(false)
+        .transparent(true)
+        .shadow(false)
+        .resizable(false)
+        .visible(false)
+        .fullscreen(false)
+        .build()?;
 
         // Positioning and sizing
         window.set_size(Size::Physical(size.clone()))?;
@@ -55,7 +57,7 @@ pub fn setup_monitors<R: tauri::Runtime>(app: &mut tauri::App<R>) -> Result<(), 
             y: pos.y - min_y,
         }))?;
 
-        // Window previously invisible to avoid showing resize and positioning animations 
+        // Window previously invisible to avoid showing resize and positioning animations
         window.show()?;
 
         // Attach as wallpaper

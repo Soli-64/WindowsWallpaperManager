@@ -7,7 +7,6 @@ use std::process::Command;
 pub struct ThumbnailManager {}
 
 impl ThumbnailManager {
-    
     pub fn new() -> Self {
         Self {}
     }
